@@ -1,29 +1,43 @@
-from src.Tools.tools import fetch_url
+from src.Tools.tools import (
+    fetch_url,
+    chunk_text,deduplicate,
+    vector_search
+)
 
+
+# 🔍 RESEARCH AGENT
 def research_agent(state):
-    user_input = state["input"]
-    if "http" in user_input:
-        state["steps"].append("Research: fetching URL")
-        state["data"] = fetch_url(user_input)
-    else:
-        state["steps"].append("Research: calculating expression")
+    url = state["input"]
+    state["steps"].append("Research: fetching + parsing")
+
+   
+    text = fetch_url(url)
+    chunks = chunk_text(text)
+
+    state["data"] = chunks
     return state
 
-def Summarization_agent(state):
-    data = state.get("data", "")
-    if data and "Error" not in data:
-        state["steps"].append("Summarization: summarizing data")
-        state["summary"] = data[:200]  # Simple summarization by taking the first 200 characters
-    else:
-        state["steps"].append("Summarization: no data to summarize")
+
+# ⚙️ PROCESSING AGENT
+def processing_agent(state):
+    state["steps"].append("Processing: dedupe + retrieval")
+
+    data = deduplicate(state["data"])
+    results = vector_search(data, state["input"])
+
+    state["data"] = results
     return state
 
-def Reviewer_agent(state):
-    summary = state.get("summary", "")
-    if summary and "Error" not in summary:
-        state["steps"].append("Reviewer: reviewing summary")
-        state["review"] = f"Review of summary: {summary[:100]}"  # Simple review by taking the first 100 characters
-    else:
-        state["steps"].append("Reviewer: no summary to review")
-        state["output"] = "No summary available for review" 
+
+# 🧠 SYNTHESIS AGENT
+def synthesis_agent(state):
+    state["steps"].append("Synthesis: generating output")
+
+    if not state["data"]:
+        state["output"] = "No useful data found"
+        return state
+
+    combined = " ".join(state["data"])
+    state["output"] = combined[:300]
+
     return state
