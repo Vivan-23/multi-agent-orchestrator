@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from src.Core.orchestrator import run_pipeline
 
+import json
+from src.Core.orchestrator import RUNS_FILE
 app = FastAPI()
 
 
@@ -10,23 +12,34 @@ def home():
 
 @app.post("/run")
 def run(data: dict):
-    user_input = data.get("input", "")
-    model = data.get("model", "mock-model")
+    return run_pipeline(
+        data.get("input", ""),
+        data.get("model", "llama3-8b-8192")
+    )
 
-    return run_pipeline(user_input, model)
 
 @app.get("/runs")
 def get_runs():
     try:
-        with open("data/runs.json", "r") as f:
-            return json.load(f)
-    except:
-        return []
+        with open(RUNS_FILE, "r") as f:
+            data = json.load(f)   # ✅ proper parsing
+        return data
+    except Exception as e:
+        return {"error": str(e)}
     
-@app.get("/logs")
-def get_logs():
+@app.get("/logs/{run_id}")
+def get_logs_by_run(run_id: str):
     try:
         with open("logs/run_logs.jsonl", "r") as f:
-            return [line for line in f.readlines()]
-    except:
-        return []
+            logs = [json.loads(line) for line in f.readlines()]
+
+        # ✅ SAFE ACCESS
+        filtered = [
+            log for log in logs 
+            if log.get("run_id") == run_id
+        ]
+
+        return filtered
+
+    except Exception as e:
+        return {"error": str(e)}

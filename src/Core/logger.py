@@ -8,9 +8,10 @@ LOG_FILE = "logs/run_logs.jsonl"
 os.makedirs("logs", exist_ok=True)
 
 
-def log_event(agent: str, step: str, status: str, error: str = None):
+def log_event(agent: str, step: str, status: str, run_id: str, error: str = None):
     log_entry = {
         "timestamp": datetime.now().isoformat(),
+        "run_id": run_id,   # 🔥 important
         "agent": agent,
         "step": step,
         "status": status,

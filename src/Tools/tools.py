@@ -40,11 +40,6 @@ def fetch_url(url: str):
     except Exception as e:
         return f"Error: {str(e)}"
     
-def chunk_text(text: str, size: int = 200):
-    try:
-        return [text[i:i+size] for i in range(0, len(text), size)]
-    except:
-        return []
 
 def deduplicate(data: list):
     try:
@@ -52,25 +47,27 @@ def deduplicate(data: list):
     except:
         return data
 
-def vector_search(texts, query):
-    try:
-        if not texts:
-            return []
+def find_subdomains(domain: str):
+    return [
+        f"api.{domain}",
+        f"dev.{domain}",
+        f"admin.{domain}"
+    ]
+    
+def analyze_domain(domain: str):
+    return {
+        "domain": domain,
+        "ip": "93.184.216.34",
+        "hosting": "Example Hosting",
+        "technologies": ["nginx", "react"]
+    }
 
-        # Mock embeddings (random vectors)
-        vectors = np.random.rand(len(texts), 5).astype("float32")
-
-        index = faiss.IndexFlatL2(5)
-        index.add(vectors)
-
-        q = np.random.rand(1, 5).astype("float32")
-
-        _, I = index.search(q, k=min(3, len(texts)))
-
-        return [texts[i] for i in I[0]]
-    except:
-        return texts[:3]
-
+def scan_endpoints(domain: str):
+    return [
+        f"https://{domain}/login",
+        f"https://{domain}/api",
+        f"https://{domain}/dashboard"
+    ]
 
 def execute_code(code: str):
     try:

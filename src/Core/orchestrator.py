@@ -1,15 +1,14 @@
 from langgraph.graph import StateGraph
 from src.Agents.agents import (
-    research_agent,
+    recon_agent,
     processing_agent,
-    synthesis_agent
+    report_agent
 )
 
-
+import uuid
 from typing import TypedDict, List
 import json
 import os
-
 RUNS_FILE = "data/runs.json"
 os.makedirs("data", exist_ok=True)
 
@@ -34,16 +33,18 @@ def save_run(state):
 class State(TypedDict):
     input: str
     steps: List[str]
-    data: List[str]
-    output: str
+    data: dict   # ✅ FIXED
+    output: dict # ✅ FIXED
     errors: int
-    retries : int
+    retries: int
+    run_id: str
+    model: str
 
 def with_retry(agent_func, max_retries=2):
     def wrapper(state):
         attempts = 0
 
-        while attempts <= max_retries:
+        while attempts < max_retries:
             try:
                 return agent_func(state)
             except Exception as e:
@@ -56,24 +57,17 @@ def with_retry(agent_func, max_retries=2):
 
     return wrapper
 
-# wrap agents
-research_node = with_retry(research_agent)
-processing_node = with_retry(processing_agent)
-synthesis_node = with_retry(synthesis_agent)
-
 # build graph
 graph = StateGraph(State)
 
 # nodes
-graph.add_node("research", research_agent)
-graph.add_node("processing", processing_agent)
-graph.add_node("synthesis", synthesis_agent)
+graph.add_node("recon", with_retry(recon_agent))
+graph.add_node("processing", with_retry(processing_agent))
+graph.add_node("report", with_retry(report_agent))
 
-# flow
-graph.set_entry_point("research")
-graph.add_edge("research", "processing")
-graph.add_edge("processing", "synthesis")
-
+graph.set_entry_point("recon")
+graph.add_edge("recon", "processing")
+graph.add_edge("processing", "report")
 # compile
 app_graph = graph.compile()
 
@@ -91,20 +85,24 @@ def evaluate(state):
     
     
 
-# runner function
-def run_pipeline(user_input: str, model: str = "mock-model"):
+def run_pipeline(user_input: str, model: str = "llama-3.1-8b-instant"):
+
+    run_id = str(uuid.uuid4())  # 🔥 unique id
+
     state = app_graph.invoke({
         "input": user_input,
         "steps": [],
-        "data": [],
-        "output": "",
+        "data": {},
+        "output": {},
         "errors": 0,
         "retries": 0,
-        "model": model
+        "model": model,
+        "run_id": run_id   # 👈 ADD THIS
     })
 
     state["metrics"] = evaluate(state)
+    state["run_id"] = run_id
 
-    save_run(state)  # 🔥 important
+    save_run(state)
 
     return state
