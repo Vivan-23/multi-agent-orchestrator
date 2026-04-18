@@ -7,7 +7,30 @@ from src.Agents.agents import (
 
 
 from typing import TypedDict, List
+import json
+import os
 
+RUNS_FILE = "data/runs.json"
+os.makedirs("data", exist_ok=True)
+
+def save_run(state):
+    try:
+        if not os.path.exists(RUNS_FILE):
+            with open(RUNS_FILE, "w") as f:
+                json.dump([], f)
+
+        with open(RUNS_FILE, "r") as f:
+            runs = json.load(f)
+
+        runs.append(state)
+
+        with open(RUNS_FILE, "w") as f:
+            json.dump(runs, f, indent=2)
+
+    except:
+        pass
+    
+    
 class State(TypedDict):
     input: str
     steps: List[str]
@@ -69,16 +92,19 @@ def evaluate(state):
     
 
 # runner function
-def run_pipeline(user_input: str):
-    return app_graph.invoke({
+def run_pipeline(user_input: str, model: str = "mock-model"):
+    state = app_graph.invoke({
         "input": user_input,
         "steps": [],
         "data": [],
         "output": "",
         "errors": 0,
-        "retries": 0
+        "retries": 0,
+        "model": model
     })
-    
+
     state["metrics"] = evaluate(state)
+
+    save_run(state)  # 🔥 important
 
     return state
