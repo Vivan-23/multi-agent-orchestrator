@@ -39,6 +39,7 @@ class State(TypedDict):
     retries: int
     run_id: str
     model: str
+    risk_level: str
 
 def with_retry(agent_func, max_retries=2):
     def wrapper(state):
@@ -98,6 +99,7 @@ def run_pipeline(user_input: str, model: str = "llama-3.1-8b-instant"):
         "retries": 0,
         "model": model,
         "run_id": run_id   # 👈 ADD THIS
+        
     })
 
     state["metrics"] = evaluate(state)
