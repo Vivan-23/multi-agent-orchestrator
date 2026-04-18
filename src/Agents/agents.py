@@ -5,39 +5,58 @@ from src.Tools.tools import (
 )
 
 
-# 🔍 RESEARCH AGENT
+from src.Core.logger import log_event
+
 def research_agent(state):
-    url = state["input"]
-    state["steps"].append("Research: fetching + parsing")
+    try:
+        log_event("research", "start", "running")
 
-   
-    text = fetch_url(url)
-    chunks = chunk_text(text)
+        url = state.get("input", "")
+        text = fetch_url(url)
+        chunks = chunk_text(text)
 
-    state["data"] = chunks
-    return state
+        state["data"] = chunks
 
-
-# ⚙️ PROCESSING AGENT
-def processing_agent(state):
-    state["steps"].append("Processing: dedupe + retrieval")
-
-    data = deduplicate(state["data"])
-    results = vector_search(data, state["input"])
-
-    state["data"] = results
-    return state
-
-
-# 🧠 SYNTHESIS AGENT
-def synthesis_agent(state):
-    state["steps"].append("Synthesis: generating output")
-
-    if not state["data"]:
-        state["output"] = "No useful data found"
+        log_event("research", "complete", "success")
         return state
 
-    combined = " ".join(state["data"])
-    state["output"] = combined[:300]
+    except Exception as e:
+        log_event("research", "failed", "error", str(e))
+        state["errors"] += 1
+        return state
 
-    return state
+def processing_agent(state):
+    try:
+        log_event("processing", "start", "running")
+
+        data = deduplicate(state["data"])
+        results = vector_search(data, state["input"])
+
+        state["data"] = results
+
+        log_event("processing", "complete", "success")
+        return state
+
+    except Exception as e:
+        log_event("processing", "failed", "error", str(e))
+        state["errors"] += 1
+        return state
+
+def synthesis_agent(state):
+    try:
+        log_event("synthesis", "start", "running")
+
+        if not state["data"]:
+            state["output"] = "No useful data found"
+            return state
+
+        combined = " ".join(state["data"])
+        state["output"] = combined[:300]
+
+        log_event("synthesis", "complete", "success")
+        return state
+
+    except Exception as e:
+        log_event("synthesis", "failed", "error", str(e))
+        state["errors"] += 1
+        return state
