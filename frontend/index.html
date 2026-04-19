@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar -->
@@ -38,7 +40,7 @@
                 <div class="dashboard-container" id="dashboard-container">
                     <div class="welcome-message">
                         <div class="gradient-text huge">Ready for Recon.</div>
-                        <p>Enter a target domain or prompt to start the cybersecurity reconnaissance agent.</p>
+                        <p>Enter a target domain to start the cybersecurity reconnaissance agent.</p>
                     </div>
                 </div>
 
@@ -52,9 +54,14 @@
 
             <div class="input-area">
                 <div class="input-wrapper glass-panel">
-                    <textarea id="prompt-input" placeholder="Enter target (e.g., scan example.com) or prompt here..." rows="1"></textarea>
+                    <textarea id="prompt-input" placeholder="Enter target (e.g., scan example.com) or prompt here..."
+                        rows="1"></textarea>
                     <button id="send-btn" class="btn-send">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -62,4 +69,5 @@
     </div>
     <script src="app.js"></script>
 </body>
+
 </html>

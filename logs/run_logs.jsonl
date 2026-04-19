@@ -456,3 +456,15 @@
 {"timestamp": "2026-04-19T20:33:52.597812", "run_id": "3a51870c-add6-4e96-860d-a291f0df2205", "agent": "processing", "step": "complete", "status": "success", "error": null}
 {"timestamp": "2026-04-19T20:33:52.598809", "run_id": "3a51870c-add6-4e96-860d-a291f0df2205", "agent": "report", "step": "start", "status": "running", "error": null}
 {"timestamp": "2026-04-19T20:33:54.989883", "run_id": "3a51870c-add6-4e96-860d-a291f0df2205", "agent": "report", "step": "complete", "status": "success", "error": null}
+{"timestamp": "2026-04-19T21:50:36.130459", "run_id": "2f2d0d88-1c5b-4e9c-aaff-bbd6fc480917", "agent": "recon", "step": "start", "status": "running", "error": null}
+{"timestamp": "2026-04-19T21:51:05.026073", "run_id": "2f2d0d88-1c5b-4e9c-aaff-bbd6fc480917", "agent": "recon", "step": "complete", "status": "success", "error": null}
+{"timestamp": "2026-04-19T21:51:05.029616", "run_id": "2f2d0d88-1c5b-4e9c-aaff-bbd6fc480917", "agent": "processing", "step": "start", "status": "running", "error": null}
+{"timestamp": "2026-04-19T21:51:05.029616", "run_id": "2f2d0d88-1c5b-4e9c-aaff-bbd6fc480917", "agent": "processing", "step": "complete", "status": "success", "error": null}
+{"timestamp": "2026-04-19T21:51:05.032203", "run_id": "2f2d0d88-1c5b-4e9c-aaff-bbd6fc480917", "agent": "report", "step": "start", "status": "running", "error": null}
+{"timestamp": "2026-04-19T21:51:12.254558", "run_id": "2f2d0d88-1c5b-4e9c-aaff-bbd6fc480917", "agent": "report", "step": "complete", "status": "success", "error": null}
+{"timestamp": "2026-04-19T19:20:23.524836", "run_id": "271e7258-d8c6-41d3-913b-c3e6b58d3269", "agent": "recon", "step": "start", "status": "running", "error": null}
+{"timestamp": "2026-04-19T19:20:49.068801", "run_id": "271e7258-d8c6-41d3-913b-c3e6b58d3269", "agent": "recon", "step": "complete", "status": "success", "error": null}
+{"timestamp": "2026-04-19T19:20:49.073156", "run_id": "271e7258-d8c6-41d3-913b-c3e6b58d3269", "agent": "processing", "step": "start", "status": "running", "error": null}
+{"timestamp": "2026-04-19T19:20:49.091039", "run_id": "271e7258-d8c6-41d3-913b-c3e6b58d3269", "agent": "processing", "step": "complete", "status": "success", "error": null}
+{"timestamp": "2026-04-19T19:20:49.106551", "run_id": "271e7258-d8c6-41d3-913b-c3e6b58d3269", "agent": "report", "step": "start", "status": "running", "error": null}
+{"timestamp": "2026-04-19T19:20:53.122430", "run_id": "271e7258-d8c6-41d3-913b-c3e6b58d3269", "agent": "report", "step": "complete", "status": "success", "error": null}

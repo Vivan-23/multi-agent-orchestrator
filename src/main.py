@@ -4,8 +4,18 @@ from src.Core.orchestrator import run_pipeline
 
 import json
 from src.Core.orchestrator import RUNS_FILE
+from fastapi.staticfiles import StaticFiles
+
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_event():
+    print("\n" + "="*50)
+    print("🚀 Agentic AI Recon Interface is running!")
+    print("👉 Click here to open: http://localhost:8000")
+    print("="*50 + "\n")
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,7 +24,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -48,6 +57,10 @@ def get_runs():
 @app.get("/logs/{run_id}")
 def get_logs_by_run(run_id: str):
     try:
+        import os
+        if not os.path.exists("logs/run_logs.jsonl"):
+            return []
+            
         with open("logs/run_logs.jsonl", "r") as f:
             logs = [json.loads(line) for line in f.readlines()]
 
