@@ -16,9 +16,15 @@ app.add_middleware(
 )
 
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 @app.get("/")
 def home():
-    return {"message": "LangGraph Agent Running 🚀"}
+    # Serve the frontend index.html on the root path
+    return FileResponse("frontend/index.html")
+
+
 
 @app.post("/run")
 def run(data: dict):
@@ -55,3 +61,6 @@ def get_logs_by_run(run_id: str):
 
     except Exception as e:
         return {"error": str(e)}
+
+# Mount the entire frontend directory for css, js, etc. MUST BE AT THE BOTTOM!
+app.mount("/", StaticFiles(directory="frontend"), name="frontend")

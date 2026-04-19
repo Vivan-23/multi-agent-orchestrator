@@ -6,7 +6,7 @@ from src.Agents.agents import (
 )
 from src.Core.state import AgentState
 import uuid
-from typing import TypedDict, List
+from typing import List
 import json
 import os
 import time
@@ -32,18 +32,6 @@ def save_run(state):
 
     except Exception as e:
         print(f"Error saving run: {e}")
-    
-    
-class State(TypedDict):
-    input: str
-    steps: List[str]
-    data: dict   # ✅ FIXED
-    output: dict # ✅ FIXED
-    errors: int
-    retries: int
-    run_id: str
-    model: str
-    risk_level: str
 
 def with_retry(agent_func, max_retries=2):
     def wrapper(state):
@@ -51,16 +39,16 @@ def with_retry(agent_func, max_retries=2):
             try:
                 return agent_func(state)
             except Exception:
-                state["errors"] += 1
-                state["steps"].append(f"Retry {attempt+1} for {agent_func.__name__}")
+                state.errors += 1
+                state.steps.append(f"Retry {attempt+1} for {agent_func.__name__}")
                 time.sleep(1 * (attempt + 1))  # backoff
 
-        state["steps"].append(f"{agent_func.__name__} failed permanently")
-        state["output"] = {"error": "Pipeline stopped due to repeated failure"}
+        state.steps.append(f"{agent_func.__name__} failed permanently")
+        state.output = {"error": "Pipeline stopped due to repeated failure"}
         return state
     return wrapper
 # build graph
-graph = StateGraph(State)
+graph = StateGraph(AgentState)
 
 # nodes
 graph.add_node("recon", with_retry(recon_agent))

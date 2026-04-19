@@ -4125,5 +4125,1071 @@
       "eval_score": 100
     },
     "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "example.com",
+    "steps": [
+      "Recon started",
+      "Target formatted to https://example.com",
+      "Extracted domain: example.com",
+      "Fetched homepage content",
+      "Analyzing domain technology",
+      "Extracting base domain",
+      "Searching and validating subdomains",
+      "Scanning and probing endpoints",
+      "Recon completed",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for example.com",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "example.com",
+        "ip": "172.66.147.243",
+        "hosting": "unknown",
+        "technologies": [
+          "cloudflare"
+        ]
+      },
+      "subdomains": [],
+      "endpoints": [],
+      "raw_text": "Example Domain Example Domain This domain is for use in documentation examples without needing permission. Avoid use in operations. Learn more",
+      "filtered_endpoints": {
+        "open": [],
+        "forbidden_count": 0,
+        "notable_forbidden": []
+      }
+    },
+    "output": {
+      "domain": "example.com",
+      "summary": "The reconnaissance of example.com revealed no subdomains and no open endpoints, with only generic page content displayed.",
+      "risk_level": "low",
+      "subdomains": [],
+      "endpoints": [],
+      "technologies": [
+        "cloudflare"
+      ],
+      "insights": [
+        "Insufficient data: no open endpoints or subdomains were identified, limiting the ability to assess exposure."
+      ],
+      "citations": [
+        "https://example.com"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "3202c3df-65f9-4b6a-b239-8c949428ef99",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 21,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 1,
+      "eval_score": 80
+    },
+    "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "https://qdrant.tech/documentation/overview/vector-search/",
+    "steps": [
+      "Recon started",
+      "Target formatted to https://qdrant.tech/documentation/overview/vector-search/",
+      "Extracted domain: qdrant.tech",
+      "Fetched homepage content",
+      "Analyzing domain technology",
+      "Extracting base domain",
+      "Searching and validating subdomains",
+      "Scanning and probing endpoints",
+      "Recon completed",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for qdrant.tech",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "qdrant.tech",
+        "ip": "75.2.60.5",
+        "hosting": "unknown",
+        "technologies": [
+          "Netlify"
+        ]
+      },
+      "subdomains": [
+        "api.qdrant.tech"
+      ],
+      "endpoints": [
+        {
+          "url": "http://qdrant.tech/robots.txt",
+          "status": "open"
+        },
+        {
+          "url": "http://qdrant.tech/sitemap.xml",
+          "status": "open"
+        }
+      ],
+      "raw_text": "Understanding Vector Search in Qdrant Qdrant Cloud Ecosystem Learn API Reference Search Log in Start Free Search Qdrant Cloud Ecosystem Learn API Reference Getting Started Overview What is Qdrant? Understanding Vector Search in Qdrant Qdrant Quickstart User Manual Manage Data Points Vectors Payload Collections Storage Indexing Quantization Multitenancy Search Search Filtering Hybrid Queries Explore Text Search Search Relevance Low-Latency Search Operations Capacity Planning Installation Upgrades Snapshots Usage Statistics Monitoring & Telemetry Security Troubleshooting Configuration Administration Distributed Deployment Running with GPU Optimize Performance Optimizer Inference Qdrant Edge Quickstart On-Device Embeddings Data Synchronization Patterns Synchronize with a Server Qdrant Web UI API & SDKs Qdrant Tools FastEmbed Quickstart FastEmbed & Qdrant Optimize Throughput Working with miniCOIL Working with SPLADE Working with ColBERT Reranking with FastEmbed Multi-Vector Postprocessing ",
+      "filtered_endpoints": {
+        "open": [
+          "http://qdrant.tech/robots.txt",
+          "http://qdrant.tech/sitemap.xml"
+        ],
+        "forbidden_count": 0,
+        "notable_forbidden": []
+      }
+    },
+    "output": {
+      "domain": "qdrant.tech",
+      "summary": "The domain qdrant.tech exposes two public endpoints (robots.txt and sitemap.xml) and hosts an API subdomain (api.qdrant.tech). No sensitive paths are observed, resulting in a low risk assessment.",
+      "risk_level": "low",
+      "subdomains": [
+        "api.qdrant.tech"
+      ],
+      "endpoints": [
+        "http://qdrant.tech/robots.txt",
+        "http://qdrant.tech/sitemap.xml"
+      ],
+      "technologies": [
+        "Netlify"
+      ],
+      "insights": [
+        "The publicly accessible robots.txt at http://qdrant.tech/robots.txt can be harvested by attackers to infer disallowed paths, potentially revealing hidden resources that are not indexed.",
+        "The sitemap.xml available at http://qdrant.tech/sitemap.xml enumerates the site\u2019s URLs, giving an adversary a roadmap for targeted probing of content and endpoints.",
+        "The existence of the api.qdrant.tech subdomain exposes an API surface that may be reachable without additional authentication layers, inviting enumeration of API endpoints and possible abuse.",
+        "Running on Netlify suggests a static front\u2011end, yet the separate API subdomain indicates a hybrid architecture; mismatched security controls between the static site and the API could create attack vectors."
+      ],
+      "citations": [
+        "https://qdrant.tech",
+        "https://api.qdrant.tech"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "9b85e8a7-fa32-4cd5-810f-91faa771c259",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 21,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 2,
+      "eval_score": 100
+    },
+    "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "https://learn.deeplearning.ai/courses/agentic-ai/lesson/nae3i1ymg/ungraded-lab%3A-adding-a-component-level-eval-to-the-research-workflow",
+    "steps": [
+      "Recon started",
+      "Target formatted to https://learn.deeplearning.ai/courses/agentic-ai/lesson/nae3i1ymg/ungraded-lab%3A-adding-a-component-level-eval-to-the-research-workflow",
+      "Extracted domain: learn.deeplearning.ai",
+      "Fetched homepage content",
+      "Analyzing domain technology",
+      "Extracting base domain",
+      "Searching and validating subdomains",
+      "Scanning and probing endpoints",
+      "Recon completed",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for learn.deeplearning.ai",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "learn.deeplearning.ai",
+        "ip": "172.67.73.77",
+        "hosting": "unknown",
+        "technologies": [
+          "cloudflare",
+          "Next.js"
+        ]
+      },
+      "subdomains": [
+        "blog.deeplearning.ai",
+        "staging.deeplearning.ai",
+        "auth.deeplearning.ai",
+        "dev.deeplearning.ai"
+      ],
+      "endpoints": [
+        {
+          "url": "http://learn.deeplearning.ai/robots.txt",
+          "status": "open"
+        },
+        {
+          "url": "http://learn.deeplearning.ai/sitemap.xml",
+          "status": "open"
+        },
+        {
+          "url": "http://learn.deeplearning.ai/.env",
+          "status": "forbidden"
+        },
+        {
+          "url": "http://learn.deeplearning.ai/.git",
+          "status": "forbidden"
+        }
+      ],
+      "raw_text": "Agentic AI - DeepLearning.AI close Try Skill Builder Have a friendly voice chat about how you're using AI, get feedback on your skills, and find out what to learn or build next. Got It Take Me There close Quick Guide & Tips \ud83d\udcbb \u00a0 Accessing Utils File and Helper Functions In each notebook on the top menu: 1: Click on \"File\" 2: Then, click on \"Open\" You will be able to see all the notebook files for the lesson, including any helper functions used in the notebook on the left sidebar. See the following image for the steps above. \ud83d\udd04 \u00a0 Reset User Workspace If you need to reset your workspace to its original state, follow these quick steps: 1: Access the Menu: Look for the three-dot menu (\u22ee) in the top-right corner of the notebook toolbar. 2: Restore Original Version: Click on \"Restore Original Version\" from the dropdown menu. For more detailed instructions, please visit our Reset Workspace Guide . \ud83d\udcbb \u00a0 Downloading Notebooks In each notebook on the top menu: 1: Click on \"File\" 2: Then, click on \"",
+      "filtered_endpoints": {
+        "open": [
+          "http://learn.deeplearning.ai/robots.txt",
+          "http://learn.deeplearning.ai/sitemap.xml"
+        ],
+        "forbidden_count": 2,
+        "notable_forbidden": [
+          "http://learn.deeplearning.ai/.env",
+          "http://learn.deeplearning.ai/.git"
+        ]
+      }
+    },
+    "output": {
+      "domain": "learn.deeplearning.ai",
+      "summary": "The domain learn.deeplearning.ai exposes two public endpoints (robots.txt and sitemap.xml) and hosts four subdomains, including dedicated auth, dev, and staging environments, which broaden the attack surface.",
+      "risk_level": "medium",
+      "subdomains": [
+        "blog.deeplearning.ai",
+        "staging.deeplearning.ai",
+        "auth.deeplearning.ai",
+        "dev.deeplearning.ai"
+      ],
+      "endpoints": [
+        "http://learn.deeplearning.ai/robots.txt",
+        "http://learn.deeplearning.ai/sitemap.xml"
+      ],
+      "technologies": [
+        "cloudflare",
+        "Next.js"
+      ],
+      "insights": [
+        "The auth.deeplearning.ai subdomain indicates a separate authentication service, making it a high\u2011value target for credential harvesting if isolation or rate\u2011limiting is insufficient.",
+        "The dev.deeplearning.ai subdomain suggests a development environment that may run less hardened code or expose debugging information, increasing the likelihood of exploitable misconfigurations.",
+        "The staging.deeplearning.ai subdomain provides a publicly reachable staging environment, which could mirror production data and be leveraged for reconnaissance or privilege escalation.",
+        "Publicly accessible robots.txt and sitemap.xml files enable attackers to map the site structure quickly, facilitating targeted probing of hidden resources.",
+        "The presence of blocked .env and .git endpoints reveals that configuration and repository files exist on the server; if access controls were misconfigured, these could leak sensitive secrets."
+      ],
+      "citations": [
+        "https://learn.deeplearning.ai",
+        "https://blog.deeplearning.ai",
+        "https://staging.deeplearning.ai",
+        "https://auth.deeplearning.ai",
+        "https://dev.deeplearning.ai"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "ca5a8e44-68dc-44fc-b2de-cf87f6e06bfa",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 21,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 5,
+      "eval_score": 100
+    },
+    "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "scanme.nmap.org",
+    "steps": [
+      "Recon started",
+      "Target formatted to https://scanme.nmap.org",
+      "Extracted domain: scanme.nmap.org",
+      "Fetched homepage content",
+      "Recon fallback used",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for scanme.nmap.org",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "scanme.nmap.org",
+        "technologies": []
+      },
+      "subdomains": [],
+      "endpoints": [],
+      "raw_text": "",
+      "filtered_endpoints": {
+        "open": [],
+        "forbidden_count": 0,
+        "notable_forbidden": []
+      }
+    },
+    "output": {
+      "domain": "scanme.nmap.org",
+      "summary": "The provided domain appears to be invalid or unreachable.",
+      "risk_level": "low",
+      "subdomains": [],
+      "endpoints": [],
+      "technologies": [],
+      "insights": [
+        "The provided domain is incorrect or unreachable. Please verify the target."
+      ],
+      "citations": [
+        "https://scanme.nmap.org"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "a8411f13-09dc-4800-8468-1ea5dbdeb6bd",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 17,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 1,
+      "eval_score": 80
+    },
+    "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "scanme.nmap.org",
+    "steps": [
+      "Recon started",
+      "Target formatted to https://scanme.nmap.org",
+      "Extracted domain: scanme.nmap.org",
+      "Fetched homepage content",
+      "Recon fallback used",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for scanme.nmap.org",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "scanme.nmap.org",
+        "technologies": []
+      },
+      "subdomains": [],
+      "endpoints": [],
+      "raw_text": "",
+      "filtered_endpoints": {
+        "open": [],
+        "forbidden_count": 0,
+        "notable_forbidden": []
+      }
+    },
+    "output": {
+      "domain": "scanme.nmap.org",
+      "summary": "The provided domain appears to be invalid or unreachable.",
+      "risk_level": "low",
+      "subdomains": [],
+      "endpoints": [],
+      "technologies": [],
+      "insights": [
+        "The provided domain is incorrect or unreachable. Please verify the target."
+      ],
+      "citations": [
+        "https://scanme.nmap.org"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "3bcd8154-e0ce-423d-91ea-e428c8163382",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 17,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 1,
+      "eval_score": 80
+    },
+    "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "https://scanme.nmap.org",
+    "steps": [
+      "Recon started",
+      "Target formatted to https://scanme.nmap.org",
+      "Extracted domain: scanme.nmap.org",
+      "Fetched homepage content",
+      "Recon fallback used",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for scanme.nmap.org",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "scanme.nmap.org",
+        "technologies": []
+      },
+      "subdomains": [],
+      "endpoints": [],
+      "raw_text": "",
+      "filtered_endpoints": {
+        "open": [],
+        "forbidden_count": 0,
+        "notable_forbidden": []
+      }
+    },
+    "output": {
+      "domain": "scanme.nmap.org",
+      "summary": "The provided domain appears to be invalid or unreachable.",
+      "risk_level": "low",
+      "subdomains": [],
+      "endpoints": [],
+      "technologies": [],
+      "insights": [
+        "The provided domain is incorrect or unreachable. Please verify the target."
+      ],
+      "citations": [
+        "https://scanme.nmap.org"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "7e6a10f7-ad21-4a8b-9374-b8794a3fd838",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 17,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 1,
+      "eval_score": 80
+    },
+    "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "https://scanme.nmap.org",
+    "steps": [
+      "Recon started",
+      "Target formatted to https://scanme.nmap.org",
+      "Extracted domain: scanme.nmap.org",
+      "Fetched homepage content",
+      "Recon fallback used",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for scanme.nmap.org",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "scanme.nmap.org",
+        "technologies": []
+      },
+      "subdomains": [],
+      "endpoints": [],
+      "raw_text": "",
+      "filtered_endpoints": {
+        "open": [],
+        "forbidden_count": 0,
+        "notable_forbidden": []
+      }
+    },
+    "output": {
+      "domain": "scanme.nmap.org",
+      "summary": "The provided domain appears to be invalid or unreachable.",
+      "risk_level": "low",
+      "subdomains": [],
+      "endpoints": [],
+      "technologies": [],
+      "insights": [
+        "The provided domain is incorrect or unreachable. Please verify the target."
+      ],
+      "citations": [
+        "https://scanme.nmap.org"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "f0930339-0feb-4706-a1ca-cbdc259ae737",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 17,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 1,
+      "eval_score": 80
+    },
+    "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "http://scanme.nmap.org",
+    "steps": [
+      "Recon started",
+      "Target formatted to http://scanme.nmap.org",
+      "Extracted domain: scanme.nmap.org",
+      "Fetched homepage content",
+      "Analyzing domain technology",
+      "Extracting base domain",
+      "Searching and validating subdomains",
+      "Scanning and probing endpoints",
+      "Recon completed",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for scanme.nmap.org",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "scanme.nmap.org",
+        "ip": "45.33.32.156",
+        "hosting": "unknown",
+        "technologies": [
+          "Apache/2.4.7 (Ubuntu)"
+        ]
+      },
+      "subdomains": [
+        "python.nmap.org",
+        "app.nmap.org",
+        "internal.nmap.org",
+        "cdn.nmap.org",
+        "remote.nmap.org",
+        "vpn.nmap.org",
+        "console.nmap.org",
+        "grafana.nmap.org",
+        "gitlab.nmap.org",
+        "dashboard.nmap.org",
+        "login.nmap.org",
+        "mail.nmap.org",
+        "admin.nmap.org",
+        "secure.nmap.org",
+        "confluence.nmap.org",
+        "cloud.nmap.org",
+        "staging.nmap.org",
+        "portal.nmap.org",
+        "test.nmap.org",
+        "git.nmap.org",
+        "jenkins.nmap.org",
+        "jira.nmap.org",
+        "status.nmap.org",
+        "blog.nmap.org",
+        "manage.nmap.org",
+        "dev.nmap.org",
+        "sandbox.nmap.org",
+        "beta.nmap.org",
+        "hub.nmap.org",
+        "js.nmap.org",
+        "auth.nmap.org",
+        "api.nmap.org",
+        "go.nmap.org"
+      ],
+      "endpoints": [],
+      "raw_text": "Go ahead and ScanMe! Nmap.org Npcap.com Seclists.org Sectools.org Insecure.org Hello, and welcome to Scanme.Nmap.Org, a service provided by the Nmap Security Scanner Project . We set up this machine to help folks learn about Nmap and also to test and make sure that their Nmap installation (or Internet connection) is working properly.  You are authorized to scan this machine with Nmap or other port scanners.  Try not to hammer on the server too hard.  A few scans in a day is fine, but don't scan 100 times a day or use this site to test your ssh brute-force password cracking tool. Thanks - Fyodor Nmap Security Scanner Ref Guide Install Guide Docs Download Nmap OEM Npcap packet capture User's Guide API docs Download Npcap OEM Security Lists Nmap Announce Nmap Dev Full Disclosure Open Source Security BreachExchange Security Tools Vuln scanners Password audit Web scanners Wireless Exploitation About About/Contact Privacy Advertising Nmap Public Source License",
+      "filtered_endpoints": {
+        "open": [],
+        "forbidden_count": 0,
+        "notable_forbidden": []
+      }
+    },
+    "output": {
+      "domain": "scanme.nmap.org",
+      "summary": "The scan reveals no open endpoints but a large set of subdomains, including admin.nmap.org, dev.nmap.org, and staging.nmap.org, indicating publicly reachable management and development interfaces. These exposed subdomains broaden the attack surface despite the lack of disclosed endpoints.",
+      "risk_level": "medium",
+      "subdomains": [
+        "python.nmap.org",
+        "app.nmap.org",
+        "internal.nmap.org",
+        "cdn.nmap.org",
+        "remote.nmap.org",
+        "vpn.nmap.org",
+        "console.nmap.org",
+        "grafana.nmap.org",
+        "gitlab.nmap.org",
+        "dashboard.nmap.org",
+        "login.nmap.org",
+        "mail.nmap.org",
+        "admin.nmap.org",
+        "secure.nmap.org",
+        "confluence.nmap.org",
+        "cloud.nmap.org",
+        "staging.nmap.org",
+        "portal.nmap.org",
+        "test.nmap.org",
+        "git.nmap.org",
+        "jenkins.nmap.org",
+        "jira.nmap.org",
+        "status.nmap.org",
+        "blog.nmap.org",
+        "manage.nmap.org",
+        "dev.nmap.org",
+        "sandbox.nmap.org",
+        "beta.nmap.org",
+        "hub.nmap.org",
+        "js.nmap.org",
+        "auth.nmap.org",
+        "api.nmap.org",
+        "go.nmap.org"
+      ],
+      "endpoints": [],
+      "technologies": [
+        "Apache/2.4.7 (Ubuntu)"
+      ],
+      "insights": [
+        "The presence of admin.nmap.org indicates an administrative interface is potentially exposed on the public internet, which could be targeted for privilege escalation if not properly secured.",
+        "The dev.nmap.org and staging.nmap.org subdomains suggest development and pre\u2011production environments are reachable externally, increasing the chance of configuration errors or outdated software being exploited.",
+        "The internal.nmap.org subdomain implies internal services may be advertised publicly, allowing attackers to enumerate internal network topology or access services intended for restricted use.",
+        "The vpn.nmap.org and remote.nmap.org subdomains hint at remote access services being publicly addressable, which could be abused for unauthorized VPN connections if authentication mechanisms are weak.",
+        "The sheer number of subdomains (over 30) expands the attack surface, making comprehensive security monitoring more challenging and raising the probability of an overlooked vulnerable service."
+      ],
+      "citations": [
+        "https://scanme.nmap.org",
+        "https://python.nmap.org",
+        "https://app.nmap.org",
+        "https://internal.nmap.org",
+        "https://cdn.nmap.org",
+        "https://remote.nmap.org",
+        "https://vpn.nmap.org",
+        "https://console.nmap.org",
+        "https://grafana.nmap.org",
+        "https://gitlab.nmap.org",
+        "https://dashboard.nmap.org",
+        "https://login.nmap.org",
+        "https://mail.nmap.org",
+        "https://admin.nmap.org",
+        "https://secure.nmap.org",
+        "https://confluence.nmap.org",
+        "https://cloud.nmap.org",
+        "https://staging.nmap.org",
+        "https://portal.nmap.org",
+        "https://test.nmap.org",
+        "https://git.nmap.org",
+        "https://jenkins.nmap.org",
+        "https://jira.nmap.org",
+        "https://status.nmap.org",
+        "https://blog.nmap.org",
+        "https://manage.nmap.org",
+        "https://dev.nmap.org",
+        "https://sandbox.nmap.org",
+        "https://beta.nmap.org",
+        "https://hub.nmap.org",
+        "https://js.nmap.org",
+        "https://auth.nmap.org",
+        "https://api.nmap.org",
+        "https://go.nmap.org"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "ebd53f5f-dcf3-49ac-89a8-3b41479106a9",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 21,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 34,
+      "eval_score": 100
+    },
+    "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "http://scanme.nmap.org",
+    "steps": [
+      "Recon started",
+      "Target formatted to http://scanme.nmap.org",
+      "Extracted domain: scanme.nmap.org",
+      "Fetched homepage content",
+      "Analyzing domain technology",
+      "Extracting base domain",
+      "Searching and validating subdomains",
+      "Scanning and probing endpoints",
+      "Recon completed",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for scanme.nmap.org",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "scanme.nmap.org",
+        "ip": "45.33.32.156",
+        "hosting": "unknown",
+        "technologies": [
+          "Apache/2.4.7 (Ubuntu)"
+        ]
+      },
+      "subdomains": [],
+      "endpoints": [],
+      "raw_text": "Go ahead and ScanMe! Nmap.org Npcap.com Seclists.org Sectools.org Insecure.org Hello, and welcome to Scanme.Nmap.Org, a service provided by the Nmap Security Scanner Project . We set up this machine to help folks learn about Nmap and also to test and make sure that their Nmap installation (or Internet connection) is working properly.  You are authorized to scan this machine with Nmap or other port scanners.  Try not to hammer on the server too hard.  A few scans in a day is fine, but don't scan 100 times a day or use this site to test your ssh brute-force password cracking tool. Thanks - Fyodor Nmap Security Scanner Ref Guide Install Guide Docs Download Nmap OEM Npcap packet capture User's Guide API docs Download Npcap OEM Security Lists Nmap Announce Nmap Dev Full Disclosure Open Source Security BreachExchange Security Tools Vuln scanners Password audit Web scanners Wireless Exploitation About About/Contact Privacy Advertising Nmap Public Source License",
+      "filtered_endpoints": {
+        "open": [],
+        "forbidden_count": 0,
+        "notable_forbidden": []
+      }
+    },
+    "output": {
+      "domain": "scanme.nmap.org",
+      "summary": "The scan of scanme.nmap.org revealed no open endpoints or subdomains, and the only identified technology is Apache/2.4.7 on Ubuntu.",
+      "risk_level": "low",
+      "subdomains": [],
+      "endpoints": [],
+      "technologies": [
+        "Apache/2.4.7 (Ubuntu)"
+      ],
+      "insights": [
+        "Insufficient data: the recon did not reveal any subdomains or open endpoints, limiting the ability to assess surface exposure."
+      ],
+      "citations": [
+        "https://scanme.nmap.org"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "27b8a984-2f3e-42f0-afb2-f8ff5a71fa51",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 21,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 1,
+      "eval_score": 80
+    },
+    "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "http://scanme.nmap.org",
+    "steps": [
+      "Recon started",
+      "Target formatted to http://scanme.nmap.org",
+      "Extracted domain: scanme.nmap.org",
+      "Fetched homepage content",
+      "Analyzing domain technology",
+      "Extracting base domain",
+      "Searching and validating subdomains",
+      "Scanning and probing endpoints",
+      "Recon completed",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for scanme.nmap.org",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "scanme.nmap.org",
+        "ip": "45.33.32.156",
+        "hosting": "unknown",
+        "technologies": [
+          "Apache/2.4.7 (Ubuntu)"
+        ]
+      },
+      "subdomains": [],
+      "endpoints": [],
+      "raw_text": "Go ahead and ScanMe! Nmap.org Npcap.com Seclists.org Sectools.org Insecure.org Hello, and welcome to Scanme.Nmap.Org, a service provided by the Nmap Security Scanner Project . We set up this machine to help folks learn about Nmap and also to test and make sure that their Nmap installation (or Internet connection) is working properly.  You are authorized to scan this machine with Nmap or other port scanners.  Try not to hammer on the server too hard.  A few scans in a day is fine, but don't scan 100 times a day or use this site to test your ssh brute-force password cracking tool. Thanks - Fyodor Nmap Security Scanner Ref Guide Install Guide Docs Download Nmap OEM Npcap packet capture User's Guide API docs Download Npcap OEM Security Lists Nmap Announce Nmap Dev Full Disclosure Open Source Security BreachExchange Security Tools Vuln scanners Password audit Web scanners Wireless Exploitation About About/Contact Privacy Advertising Nmap Public Source License",
+      "filtered_endpoints": {
+        "open": [],
+        "forbidden_count": 0,
+        "notable_forbidden": []
+      }
+    },
+    "output": {
+      "domain": "scanme.nmap.org",
+      "summary": "The scan of scanme.nmap.org revealed no open endpoints or subdomains, and the server is identified as Apache/2.4.7 on Ubuntu. The page content explicitly states the host is intended for authorized security testing.",
+      "risk_level": "low",
+      "subdomains": [],
+      "endpoints": [],
+      "technologies": [
+        "Apache/2.4.7 (Ubuntu)"
+      ],
+      "insights": [
+        "Running Apache/2.4.7 on Ubuntu indicates an older web server version that may be susceptible to known CVEs, highlighting the need for patch management.",
+        "The explicit invitation to scan in the page content encourages external probing, which could attract automated tools and increase the likelihood of denial\u2011of\u2011service pressure if rate limits are not enforced.",
+        "The absence of discovered endpoints or subdomains suggests a minimal exposed surface, yet it may also mask undisclosed services that require deeper enumeration."
+      ],
+      "citations": [
+        "https://scanme.nmap.org"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "19c0625e-afa7-4fc0-9bc8-6e64adb18698",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 21,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 1,
+      "eval_score": 80
+    },
+    "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "econ Results for: http://scanme.nmap.org",
+    "steps": [
+      "Recon started",
+      "Target formatted to https://econ Results for: http://scanme.nmap.org",
+      "Extracted domain: econ Results for: scanme.nmap.org",
+      "Fetched homepage content",
+      "Recon fallback used",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for econ Results for: scanme.nmap.org",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "econ Results for: scanme.nmap.org",
+        "technologies": []
+      },
+      "subdomains": [],
+      "endpoints": [],
+      "raw_text": "",
+      "filtered_endpoints": {
+        "open": [],
+        "forbidden_count": 0,
+        "notable_forbidden": []
+      }
+    },
+    "output": {
+      "domain": "econ Results for: scanme.nmap.org",
+      "summary": "The provided domain appears to be invalid or unreachable.",
+      "risk_level": "low",
+      "subdomains": [],
+      "endpoints": [],
+      "technologies": [],
+      "insights": [
+        "The provided domain is incorrect or unreachable. Please verify the target."
+      ],
+      "citations": [
+        "https://econ Results for: scanme.nmap.org"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "99386a14-600c-4b82-b2b7-db59c79df833",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 17,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 1,
+      "eval_score": 80
+    },
+    "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "http://scanme.nmap.org",
+    "steps": [
+      "Recon started",
+      "Target formatted to http://scanme.nmap.org",
+      "Extracted domain: scanme.nmap.org",
+      "Fetched homepage content",
+      "Analyzing domain technology",
+      "Extracting base domain",
+      "Searching and validating subdomains",
+      "Scanning and probing endpoints",
+      "Recon completed",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for scanme.nmap.org",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "scanme.nmap.org",
+        "ip": "45.33.32.156",
+        "hosting": "unknown",
+        "technologies": [
+          "Apache/2.4.7 (Ubuntu)"
+        ]
+      },
+      "subdomains": [],
+      "endpoints": [],
+      "raw_text": "Go ahead and ScanMe! Nmap.org Npcap.com Seclists.org Sectools.org Insecure.org Hello, and welcome to Scanme.Nmap.Org, a service provided by the Nmap Security Scanner Project . We set up this machine to help folks learn about Nmap and also to test and make sure that their Nmap installation (or Internet connection) is working properly.  You are authorized to scan this machine with Nmap or other port scanners.  Try not to hammer on the server too hard.  A few scans in a day is fine, but don't scan 100 times a day or use this site to test your ssh brute-force password cracking tool. Thanks - Fyodor Nmap Security Scanner Ref Guide Install Guide Docs Download Nmap OEM Npcap packet capture User's Guide API docs Download Npcap OEM Security Lists Nmap Announce Nmap Dev Full Disclosure Open Source Security BreachExchange Security Tools Vuln scanners Password audit Web scanners Wireless Exploitation About About/Contact Privacy Advertising Nmap Public Source License",
+      "filtered_endpoints": {
+        "open": [],
+        "forbidden_count": 0,
+        "notable_forbidden": []
+      }
+    },
+    "output": {
+      "domain": "scanme.nmap.org",
+      "summary": "The host presents no publicly listed subdomains or open endpoints and runs Apache/2.4.7 (Ubuntu).",
+      "risk_level": "low",
+      "subdomains": [],
+      "endpoints": [],
+      "technologies": [
+        "Apache/2.4.7 (Ubuntu)"
+      ],
+      "insights": [
+        "Running Apache/2.4.7 (Ubuntu) reveals that the web server is based on an older release that has multiple known vulnerabilities (e.g., CVE\u20112017\u20113167), which could be leveraged for remote code execution if unpatched.",
+        "The explicit invitation 'Go ahead and ScanMe! Nmap.org' indicates the service is deliberately exposed for scanning, which may attract automated probing and increase the likelihood of abuse.",
+        "The lack of any disclosed subdomains or open endpoints suggests a minimal attack surface, yet without deeper enumeration hidden services could remain undiscovered."
+      ],
+      "citations": [
+        "https://scanme.nmap.org"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "7c12f71f-e754-46ac-9a65-dbc17861ae61",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 21,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 1,
+      "eval_score": 80
+    },
+    "model_used": "openai/gpt-oss-120b"
+  },
+  {
+    "input": "http://scanme.nmap.org",
+    "steps": [
+      "Recon started",
+      "Target formatted to http://scanme.nmap.org",
+      "Extracted domain: scanme.nmap.org",
+      "Fetched homepage content",
+      "Analyzing domain technology",
+      "Extracting base domain",
+      "Searching and validating subdomains",
+      "Scanning and probing endpoints",
+      "Recon completed",
+      "Processing started",
+      "Deduplicating subdomains",
+      "Deduplicating endpoints",
+      "Filtering endpoints by status",
+      "Processing completed",
+      "Report generation started",
+      "Constructing prompt for scanme.nmap.org",
+      "Invoking LLM with model: openai",
+      "Received LLM response",
+      "Parsing LLM JSON output",
+      "Successfully parsed JSON",
+      "Report generation completed"
+    ],
+    "data": {
+      "domain_info": {
+        "domain": "scanme.nmap.org",
+        "ip": "45.33.32.156",
+        "hosting": "unknown",
+        "technologies": [
+          "Apache/2.4.7 (Ubuntu)"
+        ]
+      },
+      "subdomains": [],
+      "endpoints": [],
+      "raw_text": "Go ahead and ScanMe! Nmap.org Npcap.com Seclists.org Sectools.org Insecure.org Hello, and welcome to Scanme.Nmap.Org, a service provided by the Nmap Security Scanner Project . We set up this machine to help folks learn about Nmap and also to test and make sure that their Nmap installation (or Internet connection) is working properly.  You are authorized to scan this machine with Nmap or other port scanners.  Try not to hammer on the server too hard.  A few scans in a day is fine, but don't scan 100 times a day or use this site to test your ssh brute-force password cracking tool. Thanks - Fyodor Nmap Security Scanner Ref Guide Install Guide Docs Download Nmap OEM Npcap packet capture User's Guide API docs Download Npcap OEM Security Lists Nmap Announce Nmap Dev Full Disclosure Open Source Security BreachExchange Security Tools Vuln scanners Password audit Web scanners Wireless Exploitation About About/Contact Privacy Advertising Nmap Public Source License",
+      "filtered_endpoints": {
+        "open": [],
+        "forbidden_count": 0,
+        "notable_forbidden": []
+      }
+    },
+    "output": {
+      "domain": "scanme.nmap.org",
+      "summary": "The scanme.nmap.org host serves a single static page, reveals no subdomains or open endpoints, and runs Apache/2.4.7 on Ubuntu.",
+      "risk_level": "low",
+      "subdomains": [],
+      "endpoints": [],
+      "technologies": [
+        "Apache/2.4.7 (Ubuntu)"
+      ],
+      "insights": [
+        "Apache/2.4.7 is an outdated web server version with known CVEs, meaning any unpatched vulnerabilities could be exploited to gain unauthorized access or disclose information.",
+        "The page explicitly invites users to scan the host, indicating the service is intentionally exposed for testing, which may attract opportunistic attackers seeking vulnerable targets.",
+        "The absence of disclosed endpoints suggests only a static landing page is visible, but hidden services or APIs could exist beyond the observed surface, warranting deeper enumeration."
+      ],
+      "citations": [
+        "https://scanme.nmap.org"
+      ]
+    },
+    "errors": 0,
+    "retries": 0,
+    "run_id": "3a51870c-add6-4e96-860d-a291f0df2205",
+    "model": "openai",
+    "metrics": {
+      "steps_count": 21,
+      "tool_error_rate": 0.0,
+      "schema_valid": true,
+      "unique_sources": 1,
+      "eval_score": 80
+    },
+    "model_used": "openai/gpt-oss-120b"
   }
 ]

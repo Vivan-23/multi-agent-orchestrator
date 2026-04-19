@@ -25,8 +25,24 @@ def is_safe_url(url: str):
         return False
 
     return True
-
+def resolve_url(input_url: str) -> str:
+    if input_url.startswith("http"):
+        return input_url
+    
+    # try http first
+    for scheme in ["http", "https"]:
+        try:
+            test = f"{scheme}://{input_url}"
+            res = requests.get(test, timeout=5, 
+                             headers={"User-Agent": "Mozilla/5.0"})
+            if res.status_code < 500:
+                return test
+        except:
+            continue
+    
+    return f"http://{input_url}"  # default fallback
 def fetch_url(url: str):
+    url = resolve_url(url)
     if(is_safe_url(url) == False):
         return "Error: Unsafe URL. Only http and https URLs are allowed, and localhost is not allowed."
     try:
@@ -60,8 +76,18 @@ def validate_subdomains(domain, candidates):
         except socket.gaierror:
             pass
     return real
+# detect wildcard
+def has_wildcard_dns(domain):
+    try:
+        socket.gethostbyname(f"definitelynotreal123.{domain}")
+        return True  # wildcard exists
+    except socket.gaierror:
+        return False
+
 
 def find_subdomains(domain: str):
+    if has_wildcard_dns(domain):
+        return []
     candidates = [
         "admin", "dev", "api", "mail", "staging", "app",
         "portal", "dashboard", "beta", "test", "sandbox",

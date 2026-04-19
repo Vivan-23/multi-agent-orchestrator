@@ -16,61 +16,61 @@ from src.Core.logger import log_event
 
 # 🔍 RECON AGENT
 def recon_agent(state):
-    run_id = state["run_id"]
+    run_id = state.run_id
 
     try:
         log_event("recon", "start", "running", run_id)
-        state["steps"].append("Recon started")
+        state.steps.append("Recon started")
 
-        url = state["input"]
+        url = state.input
         if not url.startswith("http"):
             url = "https://" + url
 
-        state["steps"].append(f"Target formatted to {url}")
+        state.steps.append(f"Target formatted to {url}")
         domain = url.replace("https://", "").replace("http://", "").split("/")[0]
 
-        state["steps"].append(f"Extracted domain: {domain}")
+        state.steps.append(f"Extracted domain: {domain}")
         homepage = fetch_url(url)
-        state["steps"].append("Fetched homepage content")
+        state.steps.append("Fetched homepage content")
 
         # 🔥 fallback check
         if not homepage or homepage.startswith("Error"):
-            state["data"] = {
+            state.data = {
                 "domain_info": {"domain": domain, "technologies": []},
                 "subdomains": [],
                 "endpoints": [],
                 "raw_text": ""
             }
-            state["steps"].append("Recon fallback used")
+            state.steps.append("Recon fallback used")
 
             log_event("recon", "complete", "success", run_id)
             return state
 
         # normal flow
-        state["steps"].append("Analyzing domain technology")
+        state.steps.append("Analyzing domain technology")
         domain_info = analyze_domain(domain)
-        state["steps"].append("Extracting base domain")
+        state.steps.append("Extracting base domain")
         base_domain = extract_base_domain(url)
-        state["steps"].append("Searching and validating subdomains")
+        state.steps.append("Searching and validating subdomains")
         subdomains = find_subdomains(base_domain)
-        state["steps"].append("Scanning and probing endpoints")
+        state.steps.append("Scanning and probing endpoints")
         endpoints = scan_endpoints(domain)
 
-        state["data"] = {
+        state.data = {
             "domain_info": domain_info,
             "subdomains": subdomains,
             "endpoints": endpoints,
             "raw_text": homepage
         }
 
-        state["steps"].append("Recon completed")
+        state.steps.append("Recon completed")
 
         log_event("recon", "complete", "success", run_id)
         return state
 
     except Exception as e:
         log_event("recon", "failed", "error", run_id, str(e))
-        state["errors"] += 1
+        state.errors += 1
         return state
     
     
@@ -129,34 +129,34 @@ def filter_endpoints(endpoints):
 
 
 def processing_agent(state):
-    run_id = state["run_id"]
+    run_id = state.run_id
 
     try:
         log_event("processing", "start", "running", run_id)
-        state["steps"].append("Processing started")
+        state.steps.append("Processing started")
 
-        data = state["data"]
+        data = state.data
 
         # deduplicate
-        state["steps"].append("Deduplicating subdomains")
+        state.steps.append("Deduplicating subdomains")
         data["subdomains"] = deduplicate(data["subdomains"])
 
-        state["steps"].append("Deduplicating endpoints")
+        state.steps.append("Deduplicating endpoints")
         data["endpoints"] = deduplicate(data["endpoints"])
 
         # filter endpoints by status
-        state["steps"].append("Filtering endpoints by status")
+        state.steps.append("Filtering endpoints by status")
         data["filtered_endpoints"] = filter_endpoints(data["endpoints"])
 
-        state["data"] = data
-        state["steps"].append("Processing completed")
+        state.data = data
+        state.steps.append("Processing completed")
 
         log_event("processing", "complete", "success", run_id)
         return state
 
     except Exception as e:
         log_event("processing", "failed", "error", run_id, str(e))
-        state["errors"] += 1
+        state.errors += 1
         return state
 
 def parse_llm_response(response: str):
@@ -176,13 +176,13 @@ def parse_llm_response(response: str):
 
 # 🧠 REPORT AGENT (no LLM yet)
 def report_agent(state):
-    run_id = state["run_id"]
-    model = state.get("model", "fast")
+    run_id = state.run_id
+    model = getattr(state, "model", "openai")
     
     log_event("report", "start", "running", run_id)
-    state["steps"].append("Report generation started")
+    state.steps.append("Report generation started")
 
-    data = state["data"]
+    data = state.data
     filtered = data.get("filtered_endpoints", {
         "open": data["endpoints"],
         "forbidden_count": 0,
@@ -192,7 +192,7 @@ def report_agent(state):
     print("FORBIDDEN:", filtered["forbidden_count"])
     domain = data["domain_info"]["domain"]
 
-    state["steps"].append(f"Constructing prompt for {domain}")
+    state.steps.append(f"Constructing prompt for {domain}")
 
     prompt = f"""
 You are a cybersecurity reconnaissance analyst. Analyze the recon data below and return a single JSON object.
@@ -252,10 +252,15 @@ RULE 4 — INSIGHTS (generate 3–5)
     - Be analytical, not descriptive (explain what it means, not what it is)
     - Reference a specific endpoint or subdomain from the data by name
     - Explain the security implication clearly
+If data is sparse (no subdomains, no open endpoints), generate 
+insights based on what WAS found — technologies, server headers, 
+page content. Never return fewer than 2 insights.
 [BANNED PHRASE]: Never use the phrase "publicly reachable without 
 network restrictions" — it is forbidden. 
 [CRITICAL]Each insight must be uniquely worded and specific to that 
 finding. Do not reuse the same sentence structure across insights.
+If technologies include a versioned server (e.g. Apache/2.4.7), 
+check if the version is outdated and flag it as a finding.
   Quality bar:
     BAD  → "The site has a login page."
     BAD  → "nginx and React suggest a modern stack."
@@ -295,32 +300,32 @@ Return ONLY this JSON object. No markdown. No code blocks. No explanation.
   "citations": ["https://domain.com", "https://sub.domain.com"]
 }}
 """ 
-    model_key = state.get("model", "openai")
-    state["steps"].append(f"Invoking LLM with model: {model_key}")
+    model_key = getattr(state, "model", "openai")
+    state.steps.append(f"Invoking LLM with model: {model_key}")
     llm_output = generate_report(prompt, model_key)
-    state["steps"].append("Received LLM response")
+    state.steps.append("Received LLM response")
     
     try:
-        state["steps"].append("Parsing LLM JSON output")
+        state.steps.append("Parsing LLM JSON output")
         parsed = parse_llm_response(llm_output)
         if not parsed:
             raise ValueError("Parse failed")
-        state["steps"].append("Successfully parsed JSON")
+        state.steps.append("Successfully parsed JSON")
     except:
-        state["steps"].append("Failed to parse JSON, using fallback payload")
+        state.steps.append("Failed to parse JSON, using fallback payload")
         parsed = {
             "domain": domain,
             "summary": "Failed to parse LLM output.",
-            "subdomains": data["subdomains"],
-            "endpoints": data["endpoints"],
+            "subdomains": data["subdomains"] or [],
+            "endpoints": data["endpoints"] or [],
             "technologies": data["domain_info"]["technologies"],
             "insights": ["Fallback due to parsing error"],
             "citations": [f"https://{domain}"]
         }
     print("MODEL:", model)
     print("CALLING LLM...")
-    state["output"] = parsed
-    state["steps"].append("Report generation completed")
+    state.output = parsed
+    state.steps.append("Report generation completed")
     
     log_event("report", "complete", "success", run_id)
     return state
