@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic AI Recon Interface</title>
+    <meta name="description" content="Cybersecurity Reconnaissance Agent UI">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>⚡ Recon Agent</h2>
+                <button id="new-run-btn" class="btn-primary-small">+ New Scan</button>
+            </div>
+            <div class="history-list" id="history-list">
+                <div class="loading-text">Loading history...</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <div id="current-state-title">New Scan</div>
+                <div class="header-actions">
+                    <select id="model-select" class="glass-select">
+                        <option value="openai" selected>OpenAI (GPT OSS 120B)</option>
+                        <option value="fast">Fast (Llama 3.1 8B)</option>
+                        <option value="smart">Smart (Llama 3.3 70B)</option>
+                    </select>
+                </div>
+            </header>
+
+            <div class="content-body" id="content-body">
+                <div class="dashboard-container" id="dashboard-container">
+                    <div class="welcome-message">
+                        <div class="gradient-text huge">Ready for Recon.</div>
+                        <p>Enter a target domain or prompt to start the cybersecurity reconnaissance agent.</p>
+                    </div>
+                </div>
+
+                <div class="logs-container hidden" id="logs-container">
+                    <details class="logs-dropdown">
+                        <summary>View Execution Logs</summary>
+                        <div id="logs-content" class="code-block"></div>
+                    </details>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-wrapper glass-panel">
+                    <textarea id="prompt-input" placeholder="Enter target (e.g., scan example.com) or prompt here..." rows="1"></textarea>
+                    <button id="send-btn" class="btn-send">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

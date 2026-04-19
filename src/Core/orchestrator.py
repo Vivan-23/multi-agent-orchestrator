@@ -18,20 +18,20 @@ os.makedirs("data", exist_ok=True)
 
 def save_run(state):
     try:
-        if not os.path.exists(RUNS_FILE):
-            with open(RUNS_FILE, "w") as f:
-                json.dump([], f)
-
-        with open(RUNS_FILE, "r") as f:
-            runs = json.load(f)
+        runs = []
+        if os.path.exists(RUNS_FILE):
+            with open(RUNS_FILE, "r") as f:
+                content = f.read().strip()
+                if content:
+                    runs = json.loads(content)
 
         runs.append(state)
 
         with open(RUNS_FILE, "w") as f:
             json.dump(runs, f, indent=2)
 
-    except:
-        pass
+    except Exception as e:
+        print(f"Error saving run: {e}")
     
     
 class State(TypedDict):
@@ -95,7 +95,7 @@ def evaluate(state):
     
     
 
-def run_pipeline(user_input: str, model: str = "llama-3.1-8b-instant"):
+def run_pipeline(user_input: str, model: str = "openai"):
     
     run_id = str(uuid.uuid4())  # 🔥 unique id
 
@@ -114,7 +114,7 @@ def run_pipeline(user_input: str, model: str = "llama-3.1-8b-instant"):
     state["metrics"] = evaluate(state)
     
     state["run_id"] = run_id
-    state["model_used"] = VALID_MODELS.get(state.get("model","fast"), VALID_MODELS["fast"])
+    state["model_used"] = VALID_MODELS.get(state.get("model","openai"), VALID_MODELS["openai"])
     # state["timestamp"] = datetime.now().isoformat()
 
     save_run(state)

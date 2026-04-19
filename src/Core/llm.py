@@ -16,8 +16,8 @@ VALID_MODELS = {
     "openai": "openai/gpt-oss-120b"
 }
 
-def generate_report(prompt: str, model_key="fast"):
-    model = VALID_MODELS.get(model_key, VALID_MODELS["fast"])
+def generate_report(prompt: str, model_key="openai"):
+    model = VALID_MODELS.get(model_key, VALID_MODELS["openai"])
     try:
         response = client.chat.completions.create(
             model=model,
