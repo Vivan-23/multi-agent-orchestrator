@@ -1,3 +1,7 @@
+from pydoc import text
+
+from typer import prompt
+
 from src.Tools.tools import (
     analyze_domain,
     find_subdomains,
@@ -16,13 +20,33 @@ def recon_agent(state):
 
     try:
         log_event("recon", "start", "running", run_id)
+        state["steps"].append("Recon started")
 
-        domain = state["input"].replace("https://", "").replace("http://", "").split("/")[0]
+        url = state["input"]
+        if not url.startswith("http"):
+            url = "https://" + url
 
+        domain = url.replace("https://", "").replace("http://", "").split("/")[0]
+
+        homepage = fetch_url(url)
+
+        # 🔥 fallback check
+        if not homepage or homepage.startswith("Error"):
+            state["data"] = {
+                "domain_info": {"domain": domain, "technologies": []},
+                "subdomains": [],
+                "endpoints": [],
+                "raw_text": ""
+            }
+            state["steps"].append("Recon fallback used")
+
+            log_event("recon", "complete", "success", run_id)
+            return state
+
+        # normal flow
         domain_info = analyze_domain(domain)
         subdomains = find_subdomains(domain)
         endpoints = scan_endpoints(domain)
-        homepage = fetch_url(f"https://{domain}")
 
         state["data"] = {
             "domain_info": domain_info,
@@ -40,8 +64,8 @@ def recon_agent(state):
         log_event("recon", "failed", "error", run_id, str(e))
         state["errors"] += 1
         return state
-
-
+    
+    
 # ⚙️ PROCESSING AGENT
 def processing_agent(state):
     run_id = state["run_id"]
@@ -80,8 +104,8 @@ def clean_llm_output(text: str):
 # 🧠 REPORT AGENT (no LLM yet)
 def report_agent(state):
     run_id = state["run_id"]
-    model = state.get("model", "llama-3.1-8b-instant")
-
+    model = state.get("model", "fast")
+    
     log_event("report", "start", "running", run_id)
 
     data = state["data"] 
@@ -139,8 +163,9 @@ OUTPUT FORMAT (strict JSON, no markdown, no code blocks):
 
 RETURN ONLY THE JSON OBJECT. NO OTHER TEXT.
 """
-
-    llm_output = generate_report(prompt, model)
+    model_key = state.get("model", "fast")
+    llm_output = generate_report(prompt, model_key)
+    
     cleaned = clean_llm_output(llm_output)
     try:
         parsed = json.loads(cleaned)
@@ -157,6 +182,6 @@ RETURN ONLY THE JSON OBJECT. NO OTHER TEXT.
     print("MODEL:", model)
     print("CALLING LLM...")
     state["output"] = parsed
-
+    
     log_event("report", "complete", "success", run_id)
     return state

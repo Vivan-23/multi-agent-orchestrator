@@ -4,11 +4,15 @@ from src.Agents.agents import (
     processing_agent,
     report_agent
 )
-
+from src.Core.state import AgentState
 import uuid
 from typing import TypedDict, List
 import json
 import os
+import time
+from src.Core.llm import VALID_MODELS
+import datetime
+
 RUNS_FILE = "data/runs.json"
 os.makedirs("data", exist_ok=True)
 
@@ -43,21 +47,18 @@ class State(TypedDict):
 
 def with_retry(agent_func, max_retries=2):
     def wrapper(state):
-        attempts = 0
-
-        while attempts < max_retries:
+        for attempt in range(max_retries):
             try:
                 return agent_func(state)
-            except Exception as e:
-                attempts += 1
+            except Exception:
                 state["errors"] += 1
-                state["steps"].append(f"Retry {attempts} for {agent_func.__name__}")
+                state["steps"].append(f"Retry {attempt+1} for {agent_func.__name__}")
+                time.sleep(1 * (attempt + 1))  # backoff
 
-        state["output"] = f"Failed after {max_retries} retries"
+        state["steps"].append(f"{agent_func.__name__} failed permanently")
+        state["output"] = {"error": "Pipeline stopped due to repeated failure"}
         return state
-
     return wrapper
-
 # build graph
 graph = StateGraph(State)
 
@@ -73,21 +74,29 @@ graph.add_edge("processing", "report")
 app_graph = graph.compile()
 
 def evaluate(state):
-    steps_count = len(state["steps"])
-    error_count = state["errors"]
+    output = state.get("output", {})
 
-    score = max(0, 10 - error_count)
+    schema_valid = isinstance(output, dict) and "summary" in output
+    unique_sources = len(set(output.get("citations", [])))
+    tool_error_rate = state["errors"] / max(1, len(state["steps"]))
+
+    score = 10
+    if not schema_valid: score -= 3
+    if unique_sources < 2: score -= 2
+    if tool_error_rate > 0.3: score -= 2
 
     return {
-        "steps_count": steps_count,
-        "error_count": error_count,
-        "eval_score": score
+        "steps_count": len(state["steps"]),
+        "tool_error_rate": tool_error_rate,
+        "schema_valid": schema_valid,
+        "unique_sources": unique_sources,
+        "eval_score": score*10
     }
     
     
 
 def run_pipeline(user_input: str, model: str = "llama-3.1-8b-instant"):
-
+    
     run_id = str(uuid.uuid4())  # 🔥 unique id
 
     state = app_graph.invoke({
@@ -103,7 +112,10 @@ def run_pipeline(user_input: str, model: str = "llama-3.1-8b-instant"):
     })
 
     state["metrics"] = evaluate(state)
+    
     state["run_id"] = run_id
+    state["model_used"] = VALID_MODELS.get(state.get("model","fast"), VALID_MODELS["fast"])
+    # state["timestamp"] = datetime.now().isoformat()
 
     save_run(state)
 

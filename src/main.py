@@ -17,13 +17,15 @@ def run(data: dict):
         data.get("model", "llama3-8b-8192")
     )
 
-
 @app.get("/runs")
 def get_runs():
     try:
         with open(RUNS_FILE, "r") as f:
-            data = json.load(f)   # ✅ proper parsing
-        return data
+            content = f.read().strip()
+            runs = json.loads(content) if content else []
+
+        return runs[-5:][::-1]   # last 5, newest first
+
     except Exception as e:
         return {"error": str(e)}
     

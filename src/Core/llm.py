@@ -9,8 +9,15 @@ client = OpenAI(
     base_url="https://api.groq.com/openai/v1"
 )
 
+# src/Core/llm.py
+VALID_MODELS = {
+    "fast": "llama-3.1-8b-instant",
+    "smart": "llama-3.3-70b-versatile",
+    "openai": "openai/gpt-oss-120b"
+}
 
-def generate_report(prompt: str, model="llama-3.1-8b-instant"):
+def generate_report(prompt: str, model_key="fast"):
+    model = VALID_MODELS.get(model_key, VALID_MODELS["fast"])
     try:
         response = client.chat.completions.create(
             model=model,
