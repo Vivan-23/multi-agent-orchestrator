@@ -98,15 +98,34 @@ def get_current_time():
 
 
 BLOCKED_IP_RANGES = [
-    ipaddress.ip_network("127.0.0.0/8"),      # loopback
-    ipaddress.ip_network("10.0.0.0/8"),        # RFC1918
-    ipaddress.ip_network("172.16.0.0/12"),     # RFC1918
-    ipaddress.ip_network("192.168.0.0/16"),    # RFC1918
-    ipaddress.ip_network("169.254.0.0/16"),    # cloud metadata (AWS/GCP/Azure)
-    ipaddress.ip_network("0.0.0.0/8"),         # unspecified
-    ipaddress.ip_network("::1/128"),           # IPv6 loopback
-    ipaddress.ip_network("fe80::/10"),         # IPv6 link-local
-    ipaddress.ip_network("fc00::/7"),          # IPv6 unique local
+    # loopback
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("::1/128"),
+
+    # RFC1918 private networks
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+
+    # link-local — covers ALL cloud metadata endpoints
+    ipaddress.ip_network("169.254.0.0/16"),
+    ipaddress.ip_network("fe80::/10"),
+
+    # unspecified / wildcard
+    ipaddress.ip_network("0.0.0.0/8"),
+    ipaddress.ip_network("::/128"),
+
+    # IPv6 unique local
+    ipaddress.ip_network("fc00::/7"),
+
+    # documentation ranges — should never appear in real traffic
+    ipaddress.ip_network("192.0.2.0/24"),
+    ipaddress.ip_network("198.51.100.0/24"),
+    ipaddress.ip_network("203.0.113.0/24"),
+
+    # multicast — never a web server
+    ipaddress.ip_network("224.0.0.0/4"),
+    ipaddress.ip_network("ff00::/8"),
 ]
 
 # Authorized scope — only probe domains the user explicitly authorized
@@ -122,35 +141,46 @@ def is_in_scope(domain: str) -> bool:
     domain = domain.lower().strip()
     return any(domain == s or domain.endswith("." + s) for s in AUTHORIZED_SCOPE)
 
+ALLOWED_SCHEMES = {"http", "https"}
+
 def is_safe_url(url: str) -> bool:
     try:
         parsed = urlparse(url if "://" in url else "http://" + url)
 
-        # scheme check
-        if parsed.scheme not in ["http", "https"]:
+        if parsed.scheme not in ALLOWED_SCHEMES:
             return False
 
         hostname = parsed.hostname
         if not hostname:
             return False
 
-        # scope check
         if not is_in_scope(hostname):
             return False
 
-        # resolve to IP and check ranges
         try:
             resolved_ip = socket.gethostbyname(hostname)
             ip_obj = ipaddress.ip_address(resolved_ip)
-            for blocked in BLOCKED_IP_RANGES:
-                if ip_obj in blocked:
+
+            if not ip_obj.is_global:
+                return False
+
+            for blocked_range in BLOCKED_IP_RANGES:
+                if ip_obj in blocked_range:
                     return False
+
         except socket.gaierror:
-            return False  # can't resolve = unsafe
+            return False
 
         return True
 
     except Exception:
+        return False
+
+def has_wildcard_dns(domain):
+    try:
+        socket.gethostbyname(f"definitelynotreal123.{domain}")
+        return True  # wildcard exists
+    except socket.gaierror:
         return False
 
 def fetch_url(url: str):
