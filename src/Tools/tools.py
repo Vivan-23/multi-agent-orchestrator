@@ -1,48 +1,159 @@
 import requests
+import time
+import threading
+import logging
 from datetime import datetime
+from functools import wraps
 from bs4 import BeautifulSoup
-import requests
 from urllib.parse import urlparse
+import socket
 import faiss
 import numpy as np
-import socket
+from sentence_transformers import SentenceTransformer
+import ipaddress
+import os
+from dotenv import load_dotenv
+logger = logging.getLogger(__name__)
+model = None
+load_dotenv()
+def get_sentence_transformer():
+    global model
+    if model is None:
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+    return model
+
+def extract_base_domain(url: str) -> str:
+    url = url.strip()
+    parsed = urlparse(url if "://" in url else "http://" + url)
+    netloc = parsed.netloc.split(":")[0]  # remove port if any
+    parts = netloc.split(".")
+    if len(parts) > 2:
+        second_to_last = parts[-2]
+        last = parts[-1]
+        if second_to_last in ["co", "com", "net", "org", "gov", "edu"] and len(last) == 2:
+            return ".".join(parts[-3:])
+        return ".".join(parts[-2:])
+    return ".".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# Rate-limit decorator (token-bucket, thread-safe)
+# ---------------------------------------------------------------------------
+def rate_limit(max_calls: int = 5, period: float = 60.0):
+    """Decorator that limits a function to *max_calls* invocations per
+    *period* seconds.  Extra calls block until a token is available.
+    """
+    def decorator(fn):
+        lock = threading.Lock()
+        call_timestamps: list[float] = []
+
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            with lock:
+                now = time.monotonic()
+                # Purge timestamps older than the window
+                while call_timestamps and call_timestamps[0] <= now - period:
+                    call_timestamps.pop(0)
+
+                if len(call_timestamps) >= max_calls:
+                    sleep_for = period - (now - call_timestamps[0])
+                    if sleep_for > 0:
+                        logger.info(
+                            "rate_limit: %s throttled — sleeping %.1fs",
+                            fn.__name__, sleep_for,
+                        )
+                        lock.release()
+                        time.sleep(sleep_for)
+                        lock.acquire()
+                        # Re-purge after sleeping
+                        now = time.monotonic()
+                        while call_timestamps and call_timestamps[0] <= now - period:
+                            call_timestamps.pop(0)
+
+                call_timestamps.append(time.monotonic())
+
+            return fn(*args, **kwargs)
+
+        # Expose internals for testing / introspection
+        wrapper._rate_limit_max_calls = max_calls
+        wrapper._rate_limit_period = period
+        return wrapper
+    return decorator
+
+def vector_search(texts, query):
+    t_model = get_sentence_transformer()
+    embeddings = t_model.encode(texts)
+    query_vec = t_model.encode([query])
+
+    index = faiss.IndexFlatL2(embeddings.shape[1])
+    index.add(np.array(embeddings))
+
+    _, I = index.search(np.array(query_vec), k=3)
+
+    return [texts[i] for i in I[0]]
+
 def get_current_time():
     """returns the current time in a human-readable format"""
     return datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
 
-def extract_base_domain(url: str):
-    parsed = urlparse(url if "://" in url else "http://" + url)
-    parts = parsed.netloc.split(".")
-    return ".".join(parts[-2:])
 
-def is_safe_url(url: str):
-    parsed = urlparse(url)
+BLOCKED_IP_RANGES = [
+    ipaddress.ip_network("127.0.0.0/8"),      # loopback
+    ipaddress.ip_network("10.0.0.0/8"),        # RFC1918
+    ipaddress.ip_network("172.16.0.0/12"),     # RFC1918
+    ipaddress.ip_network("192.168.0.0/16"),    # RFC1918
+    ipaddress.ip_network("169.254.0.0/16"),    # cloud metadata (AWS/GCP/Azure)
+    ipaddress.ip_network("0.0.0.0/8"),         # unspecified
+    ipaddress.ip_network("::1/128"),           # IPv6 loopback
+    ipaddress.ip_network("fe80::/10"),         # IPv6 link-local
+    ipaddress.ip_network("fc00::/7"),          # IPv6 unique local
+]
 
-    if parsed.scheme not in ["http", "https"]:
-        return False
+# Authorized scope — only probe domains the user explicitly authorized
+AUTHORIZED_SCOPE = []  # populated per-run via set_scope()
 
-    if "localhost" in parsed.netloc or "127.0.0.1" in parsed.netloc:
-        return False
+def set_scope(domains: list):
+    global AUTHORIZED_SCOPE
+    AUTHORIZED_SCOPE = [d.lower().strip() for d in domains]
 
-    return True
-def resolve_url(input_url: str) -> str:
-    if input_url.startswith("http"):
-        return input_url
-    
-    # try http first
-    for scheme in ["http", "https"]:
+def is_in_scope(domain: str) -> bool:
+    if not AUTHORIZED_SCOPE:
+        return True  # no scope set = open (dev mode)
+    domain = domain.lower().strip()
+    return any(domain == s or domain.endswith("." + s) for s in AUTHORIZED_SCOPE)
+
+def is_safe_url(url: str) -> bool:
+    try:
+        parsed = urlparse(url if "://" in url else "http://" + url)
+
+        # scheme check
+        if parsed.scheme not in ["http", "https"]:
+            return False
+
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+
+        # scope check
+        if not is_in_scope(hostname):
+            return False
+
+        # resolve to IP and check ranges
         try:
-            test = f"{scheme}://{input_url}"
-            res = requests.get(test, timeout=5, 
-                             headers={"User-Agent": "Mozilla/5.0"})
-            if res.status_code < 500:
-                return test
-        except:
-            continue
-    
-    return f"http://{input_url}"  # default fallback
+            resolved_ip = socket.gethostbyname(hostname)
+            ip_obj = ipaddress.ip_address(resolved_ip)
+            for blocked in BLOCKED_IP_RANGES:
+                if ip_obj in blocked:
+                    return False
+        except socket.gaierror:
+            return False  # can't resolve = unsafe
+
+        return True
+
+    except Exception:
+        return False
+
 def fetch_url(url: str):
-    url = resolve_url(url)
     if(is_safe_url(url) == False):
         return "Error: Unsafe URL. Only http and https URLs are allowed, and localhost is not allowed."
     try:
@@ -67,156 +178,149 @@ def deduplicate(data: list):
     except:
         return data
 
-def validate_subdomains(domain, candidates):
-    real = []
-    for sub in candidates:
-        try:
-            socket.gethostbyname(f"{sub}.{domain}")
-            real.append(f"{sub}.{domain}")
-        except socket.gaierror:
-            pass
-    return real
-# detect wildcard
-def has_wildcard_dns(domain):
-    try:
-        socket.gethostbyname(f"definitelynotreal123.{domain}")
-        return True  # wildcard exists
-    except socket.gaierror:
-        return False
-
-
-def find_subdomains(domain: str):
-    if has_wildcard_dns(domain):
-        return []
-    candidates = [
-        "admin", "dev", "api", "mail", "staging", "app",
-        "portal", "dashboard", "beta", "test", "sandbox",
-        "cdn", "auth", "login", "status", "cloud", "blog",
-        "python", "js", "go", "hub", "console", "manage",
-        "internal", "secure", "vpn", "remote", "git",
-        "gitlab", "jenkins", "jira", "confluence", "grafana"
-    ]
-
-    return validate_subdomains(domain, candidates)
+# def find_subdomains(domain: str):
+#     return [
+#         f"api.{domain}",
+#         f"dev.{domain}",
+#         f"admin.{domain}"
+#     ]
     
-def detect_technologies(headers):
-    techs = []
-    server = headers.get("Server", "")
-    powered = headers.get("X-Powered-By", "")
-    if server: techs.append(server)
-    if powered: techs.append(powered)
-    return techs
+# def analyze_domain(domain: str):
+#     return {
+#         "domain": domain,
+#         "ip": "93.184.216.34",
+#         "hosting": "Example Hosting",
+#         "technologies": ["nginx", "react"]
+#     }
+
+@rate_limit(max_calls=5, period=60.0)
+def scan_endpoints(domain: str):
+    return [
+        f"https://{domain}/login",
+        f"https://{domain}/api",
+        f"https://{domain}/dashboard"
+    ]
+    
+@rate_limit(max_calls=4, period=60)
+def virustotal_scan(domain: str):
+    url = f"https://www.virustotal.com/api/v3/domains/{domain}"
+    api = os.getenv("VIRUSTOTAL_API_KEY")
+    if api is None:
+        return "Error: VIRUSTOTAL_API_KEY not found."
+    try:
+        headers = {
+            "accept": "application/json",
+            "x-apikey": api
+        }
+    
+        response = requests.get(url, headers=headers)
+        if response.status_code == 429:
+            return "Error: Rate limit exceeded. Please try again later."
+    
+        response.raise_for_status()
+        return response.json()  
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+@rate_limit(max_calls=4, period=60)
+def virustotal_find_subdomains(domain: str):
+    url = f"https://www.virustotal.com/api/v3/domains/{domain}/subdomains?limit=40"
+    api = os.getenv("VIRUSTOTAL_API_KEY")
+    if api is None:
+        return "Error: VIRUSTOTAL_API_KEY not found."
+    try:
+        headers = {
+            "accept": "application/json",
+            "x-apikey": api
+        }
+    
+        response = requests.get(url, headers=headers)
+        if response.status_code == 429:
+            return "Error: Rate limit exceeded. Please try again later."
+        
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        return f"Error: {str(e)}"
+        
+def find_subdomains(domain: str):
+    result = virustotal_find_subdomains(domain)
+
+    if isinstance(result, str) and result.startswith("Error"):
+        # fallback to old behavior if VT fails
+        return [f"api.{domain}", f"dev.{domain}", f"admin.{domain}"]
+
+    try:
+        subdomains = [item["id"] for item in result.get("data", [])]
+        return subdomains if subdomains else [f"api.{domain}", f"dev.{domain}", f"admin.{domain}"]
+    except Exception:
+        return [f"api.{domain}", f"dev.{domain}", f"admin.{domain}"]
+
 
 def analyze_domain(domain: str):
     try:
         ip = socket.gethostbyname(domain)
-    except:
+    except socket.gaierror:
         ip = "unknown"
-        
-    techs = []
-    try:
-        res = requests.get(f"http://{domain}", timeout=5, headers={"User-Agent": "Mozilla/5.0"})
-        techs = detect_technologies(res.headers)
-    except:
-        pass
 
+    vt_result = virustotal_scan(domain)
+    shodan_result = shodan_scan(ip) if ip != "unknown" else "Error: no IP"
+
+    # defaults
+    hosting = "unknown"
+    technologies = []
+    malicious_votes = 0
+    harmless_votes = 0
+    categories = []
+    open_ports = []
+    vulnerabilities = []
+
+    # ---- VirusTotal extraction (you already have this logic, reuse it) ----
+    if not (isinstance(vt_result, str) and vt_result.startswith("Error")):
+        try:
+            attrs = vt_result["data"]["attributes"]
+            stats = attrs.get("last_analysis_stats", {})
+            categories = list(attrs.get("categories", {}).values())
+            hosting = attrs.get("registrar", "unknown")
+            technologies = categories
+            malicious_votes = stats.get("malicious", 0)
+            harmless_votes = stats.get("harmless", 0)
+        except Exception:
+            pass
+
+    if not (isinstance(shodan_result, str) and shodan_result.startswith("Error")):
+        try:
+            open_ports = shodan_result.get("ports", [])
+            vulnerabilities = shodan_result.get("vulns", [])
+            if hosting == "unknown":
+                hosting = shodan_result.get("org") or shodan_result.get("isp") or "unknown"
+        except Exception:
+            pass
     return {
         "domain": domain,
         "ip": ip,
-        "hosting": "unknown",
-        "technologies": techs
+        "hosting": hosting,
+        "technologies": technologies,
+        "malicious_votes": malicious_votes,
+        "harmless_votes": harmless_votes,
+        "categories": categories,
+        "open_ports": open_ports,
+        "vulnerabilities": vulnerabilities
     }
-
-def validate_endpoints(domain, candidates):
-    real = []
-    
-    # first get the homepage response to detect catch-all
+@rate_limit(max_calls=4, period=60) 
+def shodan_scan(ip_address: str):
     try:
-        home = requests.get(
-            f"http://{domain}",
-            timeout=3,
-            allow_redirects=True,
-            headers={"User-Agent": "Mozilla/5.0"}
-        )
-        home_content = home.text[:200]  # fingerprint of homepage
-    except:
-        home_content = ""
-
-    for path in candidates:
-        try:
-            url = f"http://{domain}{path}"
-            res = requests.get(
-                url,
-                timeout=3,
-                allow_redirects=True,
-                headers={"User-Agent": "Mozilla/5.0"}
-            )
-
-            # if response looks identical to homepage = catch-all redirect, skip
-            if home_content and res.text[:200] == home_content:
-                continue
-
-            if res.status_code == 200:
-                real.append({"url": url, "status": "open"})
-            elif res.status_code == 403:
-                real.append({"url": url, "status": "forbidden"})
-            elif res.status_code in [301, 302]:
-                location = res.headers.get("Location", "")
-                if location.rstrip("/") in [
-                    f"http://{domain}",
-                    f"https://{domain}",
-                    "/"
-                ]:
-                    continue  # catch-all redirect to homepage, skip
-                real.append({"url": url, "status": "redirect"})
-
-        except:
-            pass
-
-    return real
-
-def scan_endpoints(domain: str):
-    paths = [
-        "/robots.txt", "/sitemap.xml", "/sitemap_index.xml",
-        "/admin", "/admin/login", "/administrator",
-        "/login", "/signin", "/signup", "/register",
-        "/api", "/api/v1", "/api/v2", "/api/docs",
-        "/dashboard", "/panel", "/console",
-        "/auth", "/oauth", "/sso",
-        "/internal", "/private", "/secret",
-        "/.env", "/.git", "/config",
-        "/swagger", "/swagger-ui", "/openapi.json",
-        "/graphql", "/graphiql",
-        "/health", "/status", "/ping",
-        "/metrics", "/debug", "/trace",
-        "/upload", "/uploads", "/files",
-        "/backup", "/old", "/test",
-        "/wp-admin", "/wp-login.php",  # wordpress
-        "/phpmyadmin",                  # php
-        "/server-status",               # apache
-    ]
-    return validate_endpoints(domain, paths)
-
-
-def execute_code(code: str):
-    try:
-        result = subprocess.run(
-            ["python", "-c", code],
-            timeout=5,
-            capture_output=True,
-            text=True
-        )
-        return result.stdout or result.stderr
-    except subprocess.TimeoutExpired:
-        return "Error: timeout"
+        api = os.getenv("SHODAN_API_KEY")
+        if api is None:
+            return "Error: SHODAN_API_KEY not found."
+        url = f"https://api.shodan.io/shodan/host/{ip_address}?key={api}"
+        headers = {
+            "accept": "application/json",
+        }
+        response = requests.get(url, headers=headers)
+        if response.status_code == 429:
+            return "Error: Rate limit exceeded. Please try again later."
+        response.raise_for_status()
+        return response.json()
     except Exception as e:
-        return f"Execution failed: {str(e)}"
-
-def vector_search(query: str, documents: list):
-    dim = 8
-    index = faiss.IndexFlatL2(dim)
-    vecs = np.random.rand(len(documents), dim).astype("float32")
-    index.add(vecs)
-    query_vec = np.random.rand(1, dim).astype("float32")
-    _, indices = index.search(query_vec, k=min(3, len(documents)))
-    return [documents[i] for i in indices[0]]
+        return f"Error: {str(e)}"

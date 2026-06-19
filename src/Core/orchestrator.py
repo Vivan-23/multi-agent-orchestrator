@@ -18,20 +18,23 @@ os.makedirs("data", exist_ok=True)
 
 def save_run(state):
     try:
-        runs = []
-        if os.path.exists(RUNS_FILE):
-            with open(RUNS_FILE, "r") as f:
-                content = f.read().strip()
-                if content:
-                    runs = json.loads(content)
-
-        runs.append(state)
-
-        with open(RUNS_FILE, "w") as f:
-            json.dump(runs, f, indent=2)
+        from src.Database.database import SessionLocal
+        from src.Database.crud import save_run as db_save_run
+        
+        db = SessionLocal()
+        try:
+            db_save_run(db, state)
+            db.commit()
+            print(f"[DB] Successfully saved/updated ScanRun {state.get('run_id')} in database.")
+        except Exception as e:
+            db.rollback()
+            print(f"[DB ERROR] Error committing transaction in save_run: {e}")
+            raise
+        finally:
+            db.close()
 
     except Exception as e:
-        print(f"Error saving run: {e}")
+        print(f"[DB ERROR] Error saving run to database: {e}")
 
 def with_retry(agent_func, max_retries=2):
     def wrapper(state):
@@ -101,6 +104,27 @@ def run_pipeline(user_input: str, model: str = "openai"):
 
     state["metrics"] = evaluate(state)
     
+    try:
+        from src.Database.database import SessionLocal
+        from src.Database.crud import get_last_scan_for_domain
+        from src.Core.diffing import compute_diff
+
+        db = SessionLocal()
+        try:
+            previous_scan = get_last_scan_for_domain(db, user_input, exclude_run_id=run_id)
+            if previous_scan:
+                state["diff"] = compute_diff(previous_scan.output, state.get("output", {}))
+            else:
+                state["diff"] = None
+        except Exception as e:
+            print(f"[DIFF ERROR] Error computing historical diff: {e}")
+            state["diff"] = None
+        finally:
+            db.close()
+    except Exception as e:
+        print(f"[DIFF ERROR] Error importing/connecting for diffing: {e}")
+        state["diff"] = None
+
     state["run_id"] = run_id
     state["model_used"] = VALID_MODELS.get(state.get("model","openai"), VALID_MODELS["openai"])
     # state["timestamp"] = datetime.now().isoformat()

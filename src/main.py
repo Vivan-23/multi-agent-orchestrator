@@ -1,21 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.Core.orchestrator import run_pipeline
-
-import json
-from src.Core.orchestrator import RUNS_FILE
 from fastapi.staticfiles import StaticFiles
-
+from fastapi.responses import FileResponse
+from src.Routers.scan import router as scan_router
 
 app = FastAPI()
 
 @app.on_event("startup")
 async def startup_event():
     print("\n" + "="*50)
-    print("🚀 Agentic AI Recon Interface is running!")
-    print("👉 Click here to open: http://localhost:8000")
+    print("[START] Agentic AI Recon Interface is running!")
+    print("[LINK] Click here to open: http://localhost:8000")
     print("="*50 + "\n")
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,55 +21,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-
 @app.get("/")
 def home():
     # Serve the frontend index.html on the root path
     return FileResponse("frontend/index.html")
 
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse("frontend/favicon.png")
 
-
-@app.post("/run")
-def run(data: dict):
-    return run_pipeline(
-        data.get("input", ""),
-        data.get("model", "llama3-8b-8192")
-    )
-
-@app.get("/runs")
-def get_runs():
-    try:
-        with open(RUNS_FILE, "r") as f:
-            content = f.read().strip()
-            runs = json.loads(content) if content else []
-
-        return runs[-5:][::-1]   # last 5, newest first
-
-    except Exception as e:
-        return {"error": str(e)}
-    
-@app.get("/logs/{run_id}")
-def get_logs_by_run(run_id: str):
-    try:
-        import os
-        if not os.path.exists("logs/run_logs.jsonl"):
-            return []
-            
-        with open("logs/run_logs.jsonl", "r") as f:
-            logs = [json.loads(line) for line in f.readlines()]
-
-        # ✅ SAFE ACCESS
-        filtered = [
-            log for log in logs 
-            if log.get("run_id") == run_id
-        ]
-
-        return filtered
-
-    except Exception as e:
-        return {"error": str(e)}
+# Include scan router
+app.include_router(scan_router)
 
 # Mount the entire frontend directory for css, js, etc. MUST BE AT THE BOTTOM!
 app.mount("/", StaticFiles(directory="frontend"), name="frontend")

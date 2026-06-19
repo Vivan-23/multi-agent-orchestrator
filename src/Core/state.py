@@ -15,3 +15,15 @@ class AgentState(BaseModel):
     # computed later
     risk_level: Optional[str] = None
     model_used: Optional[str] = None
+
+    def __getitem__(self, item):
+        return getattr(self, item)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+
+    def __contains__(self, item):
+        return hasattr(self, item)
+
+    def get(self, key, default=None):
+        return getattr(self, key, default)

@@ -457,3 +457,42 @@ body {
     0%, 80%, 100% { transform: scale(0); }
     40% { transform: scale(1); }
 }
+
+.sidebar-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border-color);
+    background: rgba(22, 27, 34, 0.4);
+    text-align: center;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    opacity: 0.8;
+}
+
+.sidebar-footer p {
+    margin: 2px 0;
+}
+
+/* Subdomains Dropdown styles */
+.subdomains-dropdown summary {
+    list-style: none;
+    transition: color 0.2s ease;
+}
+
+.subdomains-dropdown summary::-webkit-details-marker {
+    display: none;
+}
+
+.subdomains-dropdown summary::after {
+    content: " ▾";
+    font-size: 0.8rem;
+    display: inline-block;
+    transition: transform 0.2s ease;
+}
+
+.subdomains-dropdown[open] summary::after {
+    transform: rotate(180deg);
+}
+
+.subdomains-dropdown summary:hover {
+    color: var(--primary-grad-hover) !important;
+}

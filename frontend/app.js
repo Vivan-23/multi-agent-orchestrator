@@ -16,13 +16,13 @@ let currentRunId = null;
 let isProcessing = false;
 
 // Auto-resize textarea
-elements.promptInput.addEventListener('input', function() {
+elements.promptInput.addEventListener('input', function () {
     this.style.height = 'auto';
     this.style.height = (this.scrollHeight < 200 ? this.scrollHeight : 200) + 'px';
 });
 
 // Handle enter to send
-elements.promptInput.addEventListener('keydown', function(e) {
+elements.promptInput.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         handleSend();
@@ -37,7 +37,7 @@ async function fetchHistory() {
         const res = await fetch(`${API_BASE}/runs`);
         if (!res.ok) throw new Error("Failed to fetch history");
         const runs = await res.json();
-        
+
         if (runs.error) {
             console.warn("No runs found or API error:", runs.error);
             elements.historyList.innerHTML = '<div class="history-item" style="pointer-events: none; opacity: 0.5;">No previous scans</div>';
@@ -53,7 +53,7 @@ async function fetchHistory() {
         runs.forEach(run => {
             const el = document.createElement('div');
             el.className = 'history-item';
-            
+
             const timeStr = run.timestamp ? new Date(run.timestamp).toLocaleString() : 'Past Run';
             let previewText = run.input || 'Agent Execution';
             if (previewText.length > 35) {
@@ -64,13 +64,13 @@ async function fetchHistory() {
                 <div class="history-time">${timeStr}</div>
                 <div class="history-preview">${previewText}</div>
             `;
-            
+
             el.onclick = () => loadRun(run, el);
-            
+
             if (currentRunId && run.run_id === currentRunId) {
                 el.classList.add('active');
             }
-            
+
             elements.historyList.appendChild(el);
         });
     } catch (err) {
@@ -94,7 +94,7 @@ function startNewRun() {
     elements.promptInput.value = '';
     elements.promptInput.style.height = 'auto';
     elements.promptInput.focus();
-    
+
     document.querySelectorAll('.history-item').forEach(item => item.classList.remove('active'));
 }
 
@@ -107,7 +107,7 @@ async function handleSend() {
     if (welcomeMsg) welcomeMsg.remove();
 
     elements.dashboardContainer.innerHTML = ''; // clear previous
-    
+
     elements.promptInput.value = '';
     elements.promptInput.style.height = 'auto';
     setProcessing(true);
@@ -133,7 +133,7 @@ async function handleSend() {
         currentRunId = data.run_id || null;
 
         renderDashboard(data);
-        
+
         fetchHistory();
 
         if (currentRunId) {
@@ -151,7 +151,7 @@ async function handleSend() {
 
 function renderDashboard(data) {
     elements.dashboardContainer.innerHTML = '';
-    
+
     // Header
     const header = document.createElement('div');
     header.className = 'target-header';
@@ -161,7 +161,7 @@ function renderDashboard(data) {
     // Metrics Grid
     const metricsGrid = document.createElement('div');
     metricsGrid.className = 'metrics-grid';
-    
+
     const metrics = data.metrics || {};
     const evalScore = metrics.eval_score !== undefined ? metrics.eval_score + '/100' : 'N/A';
     const errors = data.errors !== undefined ? data.errors : '0';
@@ -182,61 +182,169 @@ function renderDashboard(data) {
             <div class="metric-label">Steps</div>
         </div>
         <div class="metric-card">
-            <div class="metric-value" style="font-size: 1.2rem; word-break: break-all; text-align: center;">${modelUsed}</div>
+            <div class="metric-value" style="font-size: 1.1rem; word-break: break-all; text-align: center;">${modelUsed}</div>
             <div class="metric-label">Model</div>
         </div>
     `;
     elements.dashboardContainer.appendChild(metricsGrid);
 
-    // Insights / Output
-    const insightsCard = document.createElement('div');
-    insightsCard.className = 'insights-card';
-    insightsCard.innerHTML = `<h3>Findings & Insights</h3>`;
-    
+    // Parse output
     let outputData = data.output || data.result || data;
-    
-    // Parse the output if it's a string that might be JSON
     if (typeof outputData === 'string') {
         try {
             outputData = JSON.parse(outputData);
-        } catch(e) {}
+        } catch (e) { }
     }
 
-    if (typeof outputData === 'object' && !Array.isArray(outputData)) {
-        // Build a bullet list from the object
-        const ul = document.createElement('ul');
-        ul.className = 'insights-list';
-        
-        const buildList = (obj) => {
-            let items = '';
-            for (const [key, val] of Object.entries(obj)) {
-                if (Array.isArray(val)) {
-                    if (val.length === 0) {
-                        items += `<li><strong>${key.toUpperCase()}:</strong> None</li>`;
-                    } else {
-                        let subItems = val.map(v => `<li style="margin-left: 20px;">${typeof v === 'object' ? JSON.stringify(v) : v}</li>`).join('');
-                        items += `<li style="margin-bottom: 12px;"><strong>${key.toUpperCase()}:</strong><ul style="margin-top: 8px; margin-bottom: 8px; padding-left: 0; list-style-type: none;">${subItems}</ul></li>`;
-                    }
-                } else if (typeof val === 'object' && val !== null) {
-                    items += `<li><strong>${key.toUpperCase()}:</strong> ${JSON.stringify(val)}</li>`;
-                } else {
-                    items += `<li><strong>${key.toUpperCase()}:</strong> ${val}</li>`;
-                }
-            }
-            return items;
+    // Main Report Card
+    const reportCard = document.createElement('div');
+    reportCard.className = 'insights-card';
+
+    if (typeof outputData === 'object' && outputData !== null && !Array.isArray(outputData)) {
+        const risk = (outputData.risk_level || 'low').toLowerCase();
+        let riskColor = '#4ade80';
+        let riskBg = 'rgba(74, 222, 128, 0.1)';
+        let riskBorder = 'rgba(74, 222, 128, 0.2)';
+        if (risk === 'high') {
+            riskColor = '#f87171';
+            riskBg = 'rgba(248, 113, 113, 0.1)';
+            riskBorder = 'rgba(248, 113, 113, 0.2)';
+        } else if (risk === 'medium') {
+            riskColor = '#fbbf24';
+            riskBg = 'rgba(251, 191, 36, 0.1)';
+            riskBorder = 'rgba(251, 191, 36, 0.2)';
         }
-        
-        ul.innerHTML = buildList(outputData);
-        insightsCard.appendChild(ul);
+
+        let htmlContent = `
+            <div class="report-section risk-overview-section" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; padding: 16px; background: ${riskBg}; border: 1px solid ${riskBorder}; border-radius: 12px;">
+                <div>
+                    <span style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Risk Assessment</span>
+                    <h2 style="font-size: 1.8rem; font-weight: 700; margin-top: 4px; color: ${riskColor}; text-transform: capitalize;">${risk} Risk</h2>
+                </div>
+                <div class="risk-badge-icon" style="font-size: 2.5rem;">
+                    ${risk === 'high' ? '⚠️' : risk === 'medium' ? '⚡' : '🛡️'}
+                </div>
+            </div>
+            
+            <div class="report-section summary-section" style="margin-bottom: 24px;">
+                <h3 style="font-size: 1.15rem; margin-bottom: 8px; color: #fff;">Executive Summary</h3>
+                <p style="color: var(--text-main); font-size: 0.95rem; line-height: 1.6; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 10px; border: 1px solid var(--border-color);">${outputData.summary || 'No summary available.'}</p>
+            </div>
+        `;
+
+        // Technologies Section
+        const techs = outputData.technologies || [];
+        if (techs.length > 0) {
+            htmlContent += `
+                <div class="report-section tech-section" style="margin-bottom: 24px;">
+                    <h3 style="font-size: 1.15rem; margin-bottom: 12px; color: #fff;">Technologies Detected</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${techs.map(t => `<span class="tech-tag" style="background: rgba(138, 43, 226, 0.1); border: 1px solid rgba(138, 43, 226, 0.25); color: #c084fc; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">${t}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Subdomains Section
+        const subs = outputData.subdomains || [];
+        if (subs.length > 0) {
+            const visibleSubs = subs.slice(0, 7);
+            const remainingSubs = subs.slice(7);
+
+            let subsHtml = visibleSubs.map(s => `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; font-family: monospace; font-size: 0.9rem;">
+                    <span style="color: #60a5fa;">${s}</span>
+                    <button onclick="navigator.clipboard.writeText('${s}'); alert('Copied: ${s}')" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem;" title="Copy">❒</button>
+                </div>
+            `).join('');
+
+            if (remainingSubs.length > 0) {
+                subsHtml += `
+                    <details class="subdomains-dropdown" style="margin-top: 8px; outline: none;">
+                        <summary style="cursor: pointer; color: #388bfd; font-size: 0.9rem; font-weight: 600; outline: none; user-select: none; display: inline-flex; align-items: center; gap: 4px;">
+                            <span>Show More (${remainingSubs.length} more)</span>
+                        </summary>
+                        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                            ${remainingSubs.map(s => `
+                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; font-family: monospace; font-size: 0.9rem;">
+                                    <span style="color: #60a5fa;">${s}</span>
+                                    <button onclick="navigator.clipboard.writeText('${s}'); alert('Copied: ${s}')" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem;" title="Copy">❒</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </details>
+                `;
+            }
+
+            htmlContent += `
+                <div class="report-section subdomains-section" style="margin-bottom: 24px;">
+                    <h3 style="font-size: 1.15rem; margin-bottom: 12px; color: #fff;">Exposed Subdomains (${subs.length})</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        ${subsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Endpoints Section
+        const ends = outputData.endpoints || [];
+        if (ends.length > 0) {
+            htmlContent += `
+                <div class="report-section endpoints-section" style="margin-bottom: 24px;">
+                    <h3 style="font-size: 1.15rem; margin-bottom: 12px; color: #fff;">Scanned Endpoints (${ends.length})</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        ${ends.map(e => `
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; font-family: monospace; font-size: 0.9rem;">
+                                <a href="${e}" target="_blank" style="color: #388bfd; text-decoration: none; word-break: break-all;">${e}</a>
+                                <button onclick="navigator.clipboard.writeText('${e}'); alert('Copied: ${e}')" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem;" title="Copy">❒</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Insights Section
+        const insights = outputData.insights || [];
+        if (insights.length > 0) {
+            htmlContent += `
+                <div class="report-section insights-section" style="margin-bottom: 24px;">
+                    <h3 style="font-size: 1.15rem; margin-bottom: 12px; color: #fff;">Security Analysis & Flaws</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        ${insights.map(ins => `
+                            <div class="insight-alert" style="display: flex; gap: 12px; padding: 14px 16px; background: rgba(255, 255, 255, 0.03); border-left: 4px solid #8a2be2; border-top: 1px solid var(--border-color); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); border-radius: 0 8px 8px 0; font-size: 0.92rem; line-height: 1.5;">
+                                <div style="color: #a855f7; font-size: 1.1rem; font-weight: bold;">🔎</div>
+                                <div style="color: var(--text-main);">${ins}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Citations Section
+        const cites = outputData.citations || [];
+        if (cites.length > 0) {
+            htmlContent += `
+                <div class="report-section citations-section" style="margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                    <h4 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px;">Sources & Citations:</h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${cites.map(c => `<a href="${c}" target="_blank" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); color: var(--text-muted); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.color='#fff'; this.style.borderColor='rgba(255,255,255,0.2)'" onmouseout="this.style.color='var(--text-muted)'; this.style.borderColor='var(--border-color)'">${c}</a>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        reportCard.innerHTML = htmlContent;
     } else {
-        // Fallback for string
         const p = document.createElement('p');
         p.style.whiteSpace = 'pre-wrap';
+        p.style.lineHeight = '1.6';
         p.textContent = typeof outputData === 'string' ? outputData : JSON.stringify(outputData, null, 2);
-        insightsCard.appendChild(p);
+        reportCard.appendChild(p);
     }
-    
-    elements.dashboardContainer.appendChild(insightsCard);
+
+    elements.dashboardContainer.appendChild(reportCard);
 }
 
 function showLoader() {
@@ -270,9 +378,9 @@ async function loadRun(run, el) {
     currentRunId = run.run_id || null;
     elements.dashboardContainer.innerHTML = '';
     elements.currentStateTitle.textContent = `Scan Details`;
-    
+
     renderDashboard(run);
-    
+
     if (run.run_id) {
         fetchLogs(run.run_id);
     } else {
@@ -288,14 +396,14 @@ async function fetchLogs(runId) {
         const res = await fetch(`${API_BASE}/logs/${runId}`);
         if (!res.ok) throw new Error("Failed to fetch logs");
         const logs = await res.json();
-        
+
         elements.logsContainer.classList.remove('hidden');
         if (logs.length === 0) {
             elements.logsContent.textContent = "No logs available for this run.";
         } else {
             elements.logsContent.textContent = logs.map(l => JSON.stringify(l, null, 2)).join('\n\n');
         }
-        
+
         setTimeout(() => {
             const contentBody = document.getElementById('content-body');
             contentBody.scrollTop = contentBody.scrollHeight;
@@ -307,5 +415,5 @@ async function fetchLogs(runId) {
 
 // Initial fetch
 fetchHistory();
-// Refresh history every 10 seconds
-setInterval(fetchHistory, 10000);
+// Refresh history every 15 seconds
+setInterval(fetchHistory, 15000);
